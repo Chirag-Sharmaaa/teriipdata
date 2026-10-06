@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Activity, ArrowUpRight, Bell, ChevronDown, ClipboardList, Database, FileSpreadsheet, FileUp, FlaskConical, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
 const navigation = [
@@ -11,7 +12,7 @@ const navigation = [
 ] as const;
 
 export function TeriipShell({ children, eyebrow, title, description, actions }: {
-  children: React.ReactNode;
+  children: ReactNode;
   eyebrow: string;
   title: string;
   description: string;
@@ -69,6 +70,6 @@ export function TeriipShell({ children, eyebrow, title, description, actions }: 
   );
 }
 
-export function SectionTitle({ icon: Icon, title, detail, aside }: { icon: typeof Database; title: string; detail?: string; aside?: React.ReactNode }) {
+export function SectionTitle({ icon: Icon, title, detail, aside }: { icon: typeof Database; title: string; detail?: string; aside?: ReactNode }) {
   return <div className="section-title-row"><div className="section-title"><span className="section-icon"><Icon size={16} /></span><div><h2>{title}</h2>{detail && <p>{detail}</p>}</div></div>{aside}</div>;
 }

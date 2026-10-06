@@ -29,7 +29,7 @@ const group = (
 
 export const COMMON_PARAMETERS: Parameter[] = [
   ...group("Identity", [
-    ["RecordID"], ["Name"], ["AGE", "years", ["Age"]], ["Gender"], ["Blood Group", undefined, ["ABO & Rh Blood grouping"]],
+    ["RecordID"], ["Name"], ["AGE", "years", ["Age"]], ["Gender"], ["Blood Group"],
   ]),
   ...group("Haematology", [
     ["Hb"], ["PCV"], ["TRBC"], ["MCV"], ["MCH"], ["MCHC"], ["RDW"], ["TLC"],
