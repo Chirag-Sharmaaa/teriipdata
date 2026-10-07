@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { Activity, AlertCircle, ArrowDownToLine, ArrowRight, ArrowUpRight, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardCheck, Clock3, Database, FileCheck2, FileSpreadsheet, FileText, Filter, FlaskConical, FolderSync, Gauge, Info, LockKeyhole, MoreHorizontal, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Sparkles, Upload, Users, X } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
+import { Activity, AlertCircle, ArrowDownToLine, ArrowRight, ArrowUpRight, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardCheck, Database, FileCheck2, FileSpreadsheet, FileText, Filter, FlaskConical, FolderSync, Gauge, Info, LockKeyhole, MoreHorizontal, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Users, X } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,11 @@ function ActivityTable({ selectedCentre }: { selectedCentre?: string }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const type = status === "Verified" || status === "Submitted" ? "status-good" : status === "Failed" ? "status-bad" : status === "Duplicate review" ? "status-warn" : "status-pending";
+  const type = status === "Verified" || status === "Submitted" || status === "Ready" ? "status-good" : status === "Failed" ? "status-bad" : status === "Duplicate review" || status === "Missing value" || status === "Review" ? "status-warn" : "status-pending";
   return <Badge variant="outline" className={`status-badge ${type}`}><span />{status}</Badge>;
 }
 
-function PageSection({ icon, title, detail, aside, children }: { icon: typeof Database; title: string; detail: string; aside?: React.ReactNode; children: React.ReactNode }) {
+function PageSection({ icon, title, detail, aside, children }: { icon: typeof Database; title: string; detail: string; aside?: ReactNode; children: ReactNode }) {
   return <section className="content-section"><SectionTitle icon={icon} title={title} detail={detail} aside={aside} />{children}</section>;
 }
 
@@ -45,7 +46,7 @@ export function DashboardView() {
     <div className="metric-grid">
       <Metric label="PARTICIPANT RECORDS" value={compact.format(metrics.records)} change="8.2%" icon={Users} />
       <Metric label="DATA COMPLETENESS" value={`${metrics.completeness}%`} change="2.4%" icon={Gauge} color="teal" />
-      <Metric label="PARAMETERS TRACKED" value="67" change="Common schema" icon={FlaskConical} color="blue" />
+      <Metric label="PARAMETERS TRACKED" value={String(COMMON_PARAMETERS.length)} change="Common schema" icon={FlaskConical} color="blue" />
       <Metric label="NEEDS REVIEW" value="08" change="3 new" icon={AlertCircle} color="orange" />
     </div>
 
@@ -61,7 +62,7 @@ export function DashboardView() {
       </PageSection>
     </div>
 
-    <PageSection icon={ClipboardCheck} title="Recent activity" detail="Latest synthetic workflow examples" aside={<Button variant="outline" size="sm" className="view-all" asChild><a href="/activity">View activity <ArrowRight size={14} /></a></Button>}>
+      <PageSection icon={ClipboardCheck} title="Recent activity" detail="Latest synthetic workflow examples" aside={<Button variant="outline" size="sm" className="view-all" asChild><Link to="/activity">View activity <ArrowRight size={14} /></Link></Button>}>
       <ActivityTable selectedCentre={centre} />
     </PageSection>
 
@@ -129,7 +130,7 @@ export function ImportView() {
         </tr>)}</tbody></table></div>
       </PageSection>
       <PageSection icon={FileCheck2} title="Import preview" detail="Sample rows after the proposed mapping.">
-        <div className="table-wrap"><table className="data-table preview-table"><thead><tr><th>DEMO RECORD</th><th>AGE</th><th>GENDER</th><th>HB</th><th>FASTING GLUCOSE</th><th>ROW STATUS</th></tr></thead><tbody>{[["SYN-1001", "34", "Female", "12.8", "91", "Ready"], ["SYN-1002", "52", "Male", "13.1", "—", "Missing value"], ["SYN-1003", "29", "Female", "—", "104", "Review"]].map((row) => <tr key={row[0]}>{row.map((cell, index) => <td key={index} className={index === 0 ? "synthetic-id" : ""}>{cell}</td>)}<td><StatusBadge status={row[5]} /></td></tr>)}</tbody></table></div>
+        <div className="table-wrap"><table className="data-table preview-table"><thead><tr><th>DEMO RECORD</th><th>AGE</th><th>GENDER</th><th>HB</th><th>FASTING GLUCOSE</th><th>ROW STATUS</th></tr></thead><tbody>{[["SYN-1001", "34", "Female", "12.8", "91", "Ready"], ["SYN-1002", "52", "Male", "13.1", "—", "Missing value"], ["SYN-1003", "29", "Female", "—", "104", "Review"]].map((row) => <tr key={row[0]}>{row.slice(0, 5).map((cell, index) => <td key={index} className={index === 0 ? "synthetic-id" : ""}>{cell}</td>)}<td><StatusBadge status={row[5]} /></td></tr>)}</tbody></table></div>
       </PageSection>
       <div className="import-footer"><span><Info size={14} /> Demo only · no source workbook was read</span><Button className="primary-action" onClick={() => setConfirmed(true)}><ClipboardCheck size={16} /> Confirm example mapping <ArrowRight size={15} /></Button></div>
     </> : <div className="success-panel"><div className="success-mark"><Check size={25} /></div><p className="eyebrow">DEMO CONFIRMATION</p><h2>Mapping example confirmed</h2><p>This was a simulated review. No spreadsheet rows were imported and no destination was changed.</p><div className="success-details"><span><CheckCircle2 size={15} /> {mappedCount} columns mapped</span><span><Database size={15} /> Mock destination · not connected</span></div><Button variant="outline" onClick={() => setConfirmed(false)}>Back to mapping</Button></div>}
