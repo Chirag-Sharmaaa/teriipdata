@@ -3,6 +3,7 @@ import { createRouter, rootRouteId } from "@tanstack/react-router";
 import { describe, expect, it } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
+import { CENTRE_EXTENSIONS, COMMON_PARAMETERS, TERIIP_CENTRES } from "@/lib/teriip-schema";
 
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
@@ -13,5 +14,30 @@ describe("App routing", () => {
     const matches = router.matchRoutes("/");
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
+  });
+
+  it("matches every TERIIP workspace page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    for (const path of ["/upload", "/import", "/activity", "/admin"]) {
+      expect(router.matchRoutes(path).at(-1)?.routeId).not.toBe(rootRouteId);
+    }
+  });
+});
+
+describe("TERIIP parameter schema", () => {
+  it("preserves the full canonical list in its documented order", () => {
+    expect(COMMON_PARAMETERS[0]?.name).toBe("RecordID");
+    expect(COMMON_PARAMETERS[1]?.name).toBe("Name");
+    expect(COMMON_PARAMETERS.at(-1)?.name).toBe("PBS");
+    expect(new Set(COMMON_PARAMETERS.map((parameter) => parameter.name)).size).toBe(COMMON_PARAMETERS.length);
+    // The brief's explicit column list contains 72 entries, despite referring to 66–67.
+    expect(COMMON_PARAMETERS).toHaveLength(72);
+  });
+
+  it("keeps centre extensions separate from the common schema", () => {
+    expect(TERIIP_CENTRES).toHaveLength(16);
+    expect(CENTRE_EXTENSIONS.map((parameter) => parameter.name)).toEqual(["MRD No", "ABO & Rh Blood grouping"]);
+    expect(COMMON_PARAMETERS.some((parameter) => parameter.name === "MRD No")).toBe(false);
   });
 });

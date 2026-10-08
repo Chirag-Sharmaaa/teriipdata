@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Application architecture
+
+- The current TERIIP workspace is a synthetic-only, in-memory TanStack Start demonstration with mock Drive status; this keeps the preview from processing real participant data or pretending that external writes succeeded.

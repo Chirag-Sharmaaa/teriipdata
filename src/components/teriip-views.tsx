@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SectionTitle, TeriipShell } from "@/components/teriip-shell";
 import { COMMON_PARAMETERS, CENTRE_EXTENSIONS, TERIIP_CENTRES } from "@/lib/teriip-schema";
+import { useDemoSettings } from "@/lib/teriip-demo-settings";
 import { demoActivity, demoCentreMetrics, demoTrend } from "@/lib/teriip-demo-data";
 
 const compact = new Intl.NumberFormat("en-IN");
@@ -37,7 +38,7 @@ function PageSection({ icon, title, detail, aside, children }: { icon: typeof Da
 }
 
 export function DashboardView() {
-  const [centre, setCentre] = useState("AIIMS Bhopal");
+  const { activeCentre: centre, setActiveCentre: setCentre } = useDemoSettings();
   const metrics = demoCentreMetrics.find((item) => item.centre === centre) ?? demoCentreMetrics[0];
   const totalRecords = demoCentreMetrics.reduce((sum, item) => sum + item.records, 0);
 
@@ -75,17 +76,21 @@ const sampleValues: Record<string, string> = {
 };
 
 export function UploadView() {
+  const { activeCentre, enabledExtensions } = useDemoSettings();
   const [query, setQuery] = useState("");
   const [fields, setFields] = useState(sampleValues);
   const [submitted, setSubmitted] = useState(false);
   const [checked, setChecked] = useState(false);
-  const shown = useMemo(() => COMMON_PARAMETERS.filter((parameter) => `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase())), [query]);
+  const extensionsForCentre = enabledExtensions[activeCentre] ?? false;
+  const parameters = extensionsForCentre ? [...COMMON_PARAMETERS, ...CENTRE_EXTENSIONS] : COMMON_PARAMETERS;
+  const shown = useMemo(() => parameters.filter((parameter) => `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase())), [query, extensionsForCentre]);
   const populated = Object.values(fields).filter(Boolean).length;
 
   return <TeriipShell eyebrow="RECORD WORKFLOW" title="PDF report review" description="Explore the review table with a fabricated participant report and synthetic values." actions={<Button variant="outline" className="quiet-action" onClick={() => { setFields(sampleValues); setSubmitted(false); setChecked(false); }}>Reset example</Button>}>
     <div className="workflow-safety"><LockKeyhole size={16} /><div><strong>Real report processing is disabled in this preview.</strong><span> Use the synthetic example below. Do not select, paste, or enter real participant information.</span></div></div>
     {!submitted ? <>
-      <div className="review-summary-strip"><div className="file-symbol"><FileText size={20} /></div><div className="summary-file"><strong>synthetic_blood_report.pdf</strong><span>Fabricated example · not a real report</span></div><Badge variant="outline" className="status-badge status-pending"><span /> Needs review</Badge><div className="summary-progress"><span>{populated} of {COMMON_PARAMETERS.length} fields populated</span><div className="mini-progress"><span style={{ width: `${Math.round(populated / COMMON_PARAMETERS.length * 100)}%` }} /></div></div></div>
+      <div className="review-summary-strip"><div className="file-symbol"><FileText size={20} /></div><div className="summary-file"><strong>synthetic_blood_report.pdf</strong><span>Fabricated example · not a real report</span></div><Badge variant="outline" className="status-badge status-pending"><span /> Needs review</Badge><div className="summary-progress"><span>{populated} of {parameters.length} fields populated</span><div className="mini-progress"><span style={{ width: `${Math.round(populated / parameters.length * 100)}%` }} /></div></div></div>
+      <div className="extension-note">Showing fields configured for <strong>{activeCentre}</strong> in Admin overview.</div>
       <div className="review-toolbar"><div className="search-field"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search parameters" aria-label="Search parameters" /></div><div className="toolbar-right"><Badge variant="outline" className="filter-count"><Filter size={13} /> {shown.length} parameters</Badge><Button variant="outline" size="sm" className="compact-button" onClick={() => setFields({ ...fields, ...sampleValues })}>Fill example values</Button></div></div>
       <div className="parameter-table-wrap"><table className="parameter-table"><thead><tr><th>PARAMETER</th><th>VALUE</th><th>UNIT</th><th>STATUS</th></tr></thead><tbody>{shown.map((parameter) => {
         const value = fields[parameter.name] ?? "";
@@ -110,11 +115,12 @@ const importedColumns = [
 ];
 
 export function ImportView() {
+  const { activeCentre, enabledExtensions } = useDemoSettings();
   const [mappings, setMappings] = useState(importedColumns.map((column) => column.canonical));
   const [confirmed, setConfirmed] = useState(false);
   const [search, setSearch] = useState("");
   const candidates = COMMON_PARAMETERS.filter((parameter) => parameter.name.toLowerCase().includes(search.toLowerCase())).map((parameter) => parameter.name);
-  candidates.push(...CENTRE_EXTENSIONS.map((parameter) => parameter.name));
+  if (enabledExtensions[activeCentre]) candidates.push(...CENTRE_EXTENSIONS.map((parameter) => parameter.name));
   const mappedCount = mappings.filter((mapping) => mapping !== "Choose parameter…" && mapping !== "Ignore this column").length;
 
   return <TeriipShell eyebrow="DATA IMPORT" title="Excel column mapping" description="Review an example workbook mapping with fabricated columns and rows." actions={<Button variant="outline" className="quiet-action" onClick={() => { setMappings(importedColumns.map((column) => column.canonical)); setConfirmed(false); }}>Reset mapping</Button>}>
@@ -122,6 +128,7 @@ export function ImportView() {
     <div className="import-overview"><div className="import-file-badge"><FileSpreadsheet size={19} /></div><div className="summary-file"><strong>synthetic_centre_dataset.xlsx</strong><span>Demo workbook · 2 worksheets · 24 fictional rows</span></div><div className="import-progress-stat"><strong>{mappedCount}<span> / {importedColumns.length}</span></strong><small>COLUMNS MAPPED</small></div><div className="import-flag-stat"><strong>2</strong><small>NEED ATTENTION</small></div></div>
     <div className="mapping-callout"><AlertCircle size={16} /><span><strong>Two columns need your attention.</strong> Confirm uncertain matches; unmatched values are never silently assigned.</span><Button variant="ghost" size="icon" aria-label="Dismiss mapping note"><X size={15} /></Button></div>
     {!confirmed ? <>
+      <div className="extension-note">Optional matches follow the fields configured for <strong>{activeCentre}</strong> in Admin overview.</div>
       <PageSection icon={SlidersHorizontal} title="Column mapping" detail="Choose the matching TERIIP field for each source column." aside={<div className="search-field mapping-search"><Search size={14} /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Find a parameter" aria-label="Find a parameter" /></div>}>
         <div className="mapping-table-wrap"><table className="mapping-table"><thead><tr><th>SOURCE COLUMN</th><th aria-label="Mapping direction" /><th>TERIIP PARAMETER</th><th>REVIEW</th></tr></thead><tbody>{importedColumns.map((column, index) => <tr key={column.source}>
           <td><div className="source-heading"><span className="sheet-grid"><FileSpreadsheet size={14} /></span><strong>{column.source}</strong></div></td><td><ArrowRight size={15} className="mapping-arrow" /></td><td><select aria-label={`Match ${column.source}`} value={mappings[index]} onChange={(event) => setMappings((current) => current.map((value, currentIndex) => currentIndex === index ? event.target.value : value))} className={`mapping-select${column.confidence === "ambiguous" || column.confidence === "review" ? " needs-check" : ""}`}>
@@ -150,7 +157,9 @@ export function ActivityView() {
 }
 
 export function AdminView() {
+  const { enabledExtensions, setCentreExtensions } = useDemoSettings();
   const [selected, setSelected] = useState("ALL CENTRES");
+  const [extensionCentre, setExtensionCentre] = useState("AIIMS Bhopal");
   const [needle, setNeedle] = useState("");
   const visibleCentres = demoCentreMetrics.filter((item) => item.centre.toLowerCase().includes(needle.toLowerCase()));
   const active = selected === "ALL CENTRES" ? demoCentreMetrics : demoCentreMetrics.filter((item) => item.centre === selected);
@@ -167,6 +176,7 @@ export function AdminView() {
         {visibleCentres.length === 0 && <div className="empty-state">No centre names match that search.</div>}
       </PageSection>
       <div className="admin-side-stack">
+        <PageSection icon={FlaskIcon} title="Optional fields" detail="Configure extensions explicitly by centre"><div className="extension-admin-controls"><label htmlFor="extension-centre">Centre</label><select className="standard-select" id="extension-centre" value={extensionCentre} onChange={(event) => setExtensionCentre(event.target.value)}>{TERIIP_CENTRES.map((centreName) => <option key={centreName}>{centreName}</option>)}</select><p>These are optional schema fields only; the brief does not identify which centre uses them.</p><label className="extension-toggle"><input type="checkbox" checked={enabledExtensions[extensionCentre] ?? false} onChange={(event) => setCentreExtensions(extensionCentre, event.target.checked)} /><span>Enable MRD No and ABO &amp; Rh Blood grouping</span><small>For {extensionCentre}</small></label></div></PageSection>
         <PageSection icon={FolderSync} title="Drive setup" detail="Connection and write destination"><div className="setup-empty"><div className="setup-icon"><FolderSync size={19} /></div><strong>No Drive connection</strong><p>Folder IDs, workbook destinations, and institutional credentials are not configured.</p><Button variant="outline" size="sm" disabled title="Not available in demo">Configuration unavailable</Button></div></PageSection>
         <PageSection icon={Users} title="User management" detail="Centre accounts"><div className="setup-empty small-setup"><div className="setup-icon"><Users size={18} /></div><strong>Account management disabled</strong><p>Secure sign-in and invitations are not available in this preview.</p></div></PageSection>
       </div>
