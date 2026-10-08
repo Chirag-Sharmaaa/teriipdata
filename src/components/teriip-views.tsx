@@ -77,15 +77,18 @@ const sampleValues: Record<string, string> = {
 export function UploadView() {
   const [query, setQuery] = useState("");
   const [fields, setFields] = useState(sampleValues);
+  const [extensionsEnabled, setExtensionsEnabled] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [checked, setChecked] = useState(false);
-  const shown = useMemo(() => COMMON_PARAMETERS.filter((parameter) => `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase())), [query]);
+  const parameters = extensionsEnabled ? [...COMMON_PARAMETERS, ...CENTRE_EXTENSIONS] : COMMON_PARAMETERS;
+  const shown = useMemo(() => parameters.filter((parameter) => `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase())), [query, extensionsEnabled]);
   const populated = Object.values(fields).filter(Boolean).length;
 
   return <TeriipShell eyebrow="RECORD WORKFLOW" title="PDF report review" description="Explore the review table with a fabricated participant report and synthetic values." actions={<Button variant="outline" className="quiet-action" onClick={() => { setFields(sampleValues); setSubmitted(false); setChecked(false); }}>Reset example</Button>}>
     <div className="workflow-safety"><LockKeyhole size={16} /><div><strong>Real report processing is disabled in this preview.</strong><span> Use the synthetic example below. Do not select, paste, or enter real participant information.</span></div></div>
     {!submitted ? <>
-      <div className="review-summary-strip"><div className="file-symbol"><FileText size={20} /></div><div className="summary-file"><strong>synthetic_blood_report.pdf</strong><span>Fabricated example · not a real report</span></div><Badge variant="outline" className="status-badge status-pending"><span /> Needs review</Badge><div className="summary-progress"><span>{populated} of {COMMON_PARAMETERS.length} fields populated</span><div className="mini-progress"><span style={{ width: `${Math.round(populated / COMMON_PARAMETERS.length * 100)}%` }} /></div></div></div>
+      <div className="review-summary-strip"><div className="file-symbol"><FileText size={20} /></div><div className="summary-file"><strong>synthetic_blood_report.pdf</strong><span>Fabricated example · not a real report</span></div><Badge variant="outline" className="status-badge status-pending"><span /> Needs review</Badge><div className="summary-progress"><span>{populated} of {parameters.length} fields populated</span><div className="mini-progress"><span style={{ width: `${Math.round(populated / parameters.length * 100)}%` }} /></div></div></div>
+      <label className="extension-toggle"><input type="checkbox" checked={extensionsEnabled} onChange={(event) => setExtensionsEnabled(event.target.checked)} /><span>Show centre-specific extension fields</span><small>Explicit demo setting</small></label>
       <div className="review-toolbar"><div className="search-field"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search parameters" aria-label="Search parameters" /></div><div className="toolbar-right"><Badge variant="outline" className="filter-count"><Filter size={13} /> {shown.length} parameters</Badge><Button variant="outline" size="sm" className="compact-button" onClick={() => setFields({ ...fields, ...sampleValues })}>Fill example values</Button></div></div>
       <div className="parameter-table-wrap"><table className="parameter-table"><thead><tr><th>PARAMETER</th><th>VALUE</th><th>UNIT</th><th>STATUS</th></tr></thead><tbody>{shown.map((parameter) => {
         const value = fields[parameter.name] ?? "";
@@ -113,8 +116,9 @@ export function ImportView() {
   const [mappings, setMappings] = useState(importedColumns.map((column) => column.canonical));
   const [confirmed, setConfirmed] = useState(false);
   const [search, setSearch] = useState("");
+  const [extensionsEnabled, setExtensionsEnabled] = useState(false);
   const candidates = COMMON_PARAMETERS.filter((parameter) => parameter.name.toLowerCase().includes(search.toLowerCase())).map((parameter) => parameter.name);
-  candidates.push(...CENTRE_EXTENSIONS.map((parameter) => parameter.name));
+  if (extensionsEnabled) candidates.push(...CENTRE_EXTENSIONS.map((parameter) => parameter.name));
   const mappedCount = mappings.filter((mapping) => mapping !== "Choose parameter…" && mapping !== "Ignore this column").length;
 
   return <TeriipShell eyebrow="DATA IMPORT" title="Excel column mapping" description="Review an example workbook mapping with fabricated columns and rows." actions={<Button variant="outline" className="quiet-action" onClick={() => { setMappings(importedColumns.map((column) => column.canonical)); setConfirmed(false); }}>Reset mapping</Button>}>
@@ -122,6 +126,7 @@ export function ImportView() {
     <div className="import-overview"><div className="import-file-badge"><FileSpreadsheet size={19} /></div><div className="summary-file"><strong>synthetic_centre_dataset.xlsx</strong><span>Demo workbook · 2 worksheets · 24 fictional rows</span></div><div className="import-progress-stat"><strong>{mappedCount}<span> / {importedColumns.length}</span></strong><small>COLUMNS MAPPED</small></div><div className="import-flag-stat"><strong>2</strong><small>NEED ATTENTION</small></div></div>
     <div className="mapping-callout"><AlertCircle size={16} /><span><strong>Two columns need your attention.</strong> Confirm uncertain matches; unmatched values are never silently assigned.</span><Button variant="ghost" size="icon" aria-label="Dismiss mapping note"><X size={15} /></Button></div>
     {!confirmed ? <>
+      <label className="extension-toggle"><input type="checkbox" checked={extensionsEnabled} onChange={(event) => setExtensionsEnabled(event.target.checked)} /><span>Enable centre-specific extension matches</span><small>Explicit demo setting</small></label>
       <PageSection icon={SlidersHorizontal} title="Column mapping" detail="Choose the matching TERIIP field for each source column." aside={<div className="search-field mapping-search"><Search size={14} /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Find a parameter" aria-label="Find a parameter" /></div>}>
         <div className="mapping-table-wrap"><table className="mapping-table"><thead><tr><th>SOURCE COLUMN</th><th aria-label="Mapping direction" /><th>TERIIP PARAMETER</th><th>REVIEW</th></tr></thead><tbody>{importedColumns.map((column, index) => <tr key={column.source}>
           <td><div className="source-heading"><span className="sheet-grid"><FileSpreadsheet size={14} /></span><strong>{column.source}</strong></div></td><td><ArrowRight size={15} className="mapping-arrow" /></td><td><select aria-label={`Match ${column.source}`} value={mappings[index]} onChange={(event) => setMappings((current) => current.map((value, currentIndex) => currentIndex === index ? event.target.value : value))} className={`mapping-select${column.confidence === "ambiguous" || column.confidence === "review" ? " needs-check" : ""}`}>
