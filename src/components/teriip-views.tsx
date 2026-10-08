@@ -157,8 +157,9 @@ export function ActivityView() {
 }
 
 export function AdminView() {
-  const { setCentreExtensions } = useDemoSettings();
+  const { enabledExtensions, setCentreExtensions } = useDemoSettings();
   const [selected, setSelected] = useState("ALL CENTRES");
+  const [extensionCentre, setExtensionCentre] = useState("AIIMS Bhopal");
   const [needle, setNeedle] = useState("");
   const visibleCentres = demoCentreMetrics.filter((item) => item.centre.toLowerCase().includes(needle.toLowerCase()));
   const active = selected === "ALL CENTRES" ? demoCentreMetrics : demoCentreMetrics.filter((item) => item.centre === selected);
@@ -175,7 +176,7 @@ export function AdminView() {
         {visibleCentres.length === 0 && <div className="empty-state">No centre names match that search.</div>}
       </PageSection>
       <div className="admin-side-stack">
-        <PageSection icon={FlaskConical} title="Optional fields" detail="Configure extensions explicitly by centre"><div className="extension-admin-controls"><label htmlFor="extension-centre">Centre</label><select className="standard-select" id="extension-centre" value={selected === "ALL CENTRES" ? "AIIMS Bhopal" : selected} onChange={(event) => setSelected(event.target.value)}>{TERIIP_CENTRES.map((centreName) => <option key={centreName}>{centreName}</option>)}</select><p>These are optional schema fields only; the brief does not identify which centre uses them.</p><label className="extension-toggle"><input type="checkbox" onChange={(event) => setCentreExtensions(selected === "ALL CENTRES" ? "AIIMS Bhopal" : selected, event.target.checked)} /><span>Enable MRD No and ABO &amp; Rh Blood grouping</span><small>For {selected === "ALL CENTRES" ? "AIIMS Bhopal" : selected}</small></label></div></PageSection>
+        <PageSection icon={FlaskIcon} title="Optional fields" detail="Configure extensions explicitly by centre"><div className="extension-admin-controls"><label htmlFor="extension-centre">Centre</label><select className="standard-select" id="extension-centre" value={extensionCentre} onChange={(event) => setExtensionCentre(event.target.value)}>{TERIIP_CENTRES.map((centreName) => <option key={centreName}>{centreName}</option>)}</select><p>These are optional schema fields only; the brief does not identify which centre uses them.</p><label className="extension-toggle"><input type="checkbox" checked={enabledExtensions[extensionCentre] ?? false} onChange={(event) => setCentreExtensions(extensionCentre, event.target.checked)} /><span>Enable MRD No and ABO &amp; Rh Blood grouping</span><small>For {extensionCentre}</small></label></div></PageSection>
         <PageSection icon={FolderSync} title="Drive setup" detail="Connection and write destination"><div className="setup-empty"><div className="setup-icon"><FolderSync size={19} /></div><strong>No Drive connection</strong><p>Folder IDs, workbook destinations, and institutional credentials are not configured.</p><Button variant="outline" size="sm" disabled title="Not available in demo">Configuration unavailable</Button></div></PageSection>
         <PageSection icon={Users} title="User management" detail="Centre accounts"><div className="setup-empty small-setup"><div className="setup-icon"><Users size={18} /></div><strong>Account management disabled</strong><p>Secure sign-in and invitations are not available in this preview.</p></div></PageSection>
       </div>
