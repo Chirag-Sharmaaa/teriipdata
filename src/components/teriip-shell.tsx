@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Activity, ArrowUpRight, Bell, ChevronDown, ClipboardList, Database, FileSpreadsheet, FileUp, FlaskConical, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useDemoSettings } from "@/lib/teriip-demo-settings";
 
 const navigation = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -19,6 +20,7 @@ export function TeriipShell({ children, eyebrow, title, description, actions }: 
   actions?: React.ReactNode;
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { activeCentre } = useDemoSettings();
 
   return (
     <div className="app-frame">
@@ -45,7 +47,7 @@ export function TeriipShell({ children, eyebrow, title, description, actions }: 
         </div>
         <button className="profile-row" type="button" aria-label="Demo user profile">
           <span className="avatar-mark">DS</span>
-          <span className="profile-copy"><strong>Demo staff</strong><small>AIIMS Bhopal · Centre</small></span>
+          <span className="profile-copy"><strong>Demo staff</strong><small>{activeCentre} · Centre</small></span>
           <ChevronDown size={14} />
         </button>
       </aside>

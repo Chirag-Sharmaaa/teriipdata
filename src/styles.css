@@ -241,6 +241,15 @@ button:disabled { cursor: not-allowed; }
 .workflow-safety > svg { flex: none; margin-top: 1px; }
 .workflow-safety strong { color: var(--foreground); font-weight: 650; }
 .workflow-safety div span { color: var(--muted-foreground); }
+.extension-note { margin-top: 12px; padding: 9px 11px; border-left: 2px solid var(--primary); background: var(--surface-soft); color: var(--muted-foreground); font-size: 10px; }
+.extension-note strong { color: var(--foreground); font-weight: 650; }
+.extension-admin-controls { display: grid; gap: 8px; }
+.extension-admin-controls > label:not(.extension-toggle) { color: var(--muted-foreground); font-size: 10px; }
+.extension-admin-controls > p { margin: 2px 0 4px; color: var(--muted-foreground); font-size: 9px; line-height: 1.5; }
+.extension-toggle { display: flex; align-items: center; gap: 8px; padding: 9px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); cursor: pointer; }
+.extension-toggle input { accent-color: var(--primary); }
+.extension-toggle > span { color: var(--foreground); font-size: 10px; }
+.extension-toggle > small { margin-left: auto; color: var(--muted-foreground); font-size: 9px; }
 .review-summary-strip, .import-overview { display: flex; align-items: center; gap: 11px; margin-top: 18px; padding: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--card); }
 .file-symbol, .import-file-badge { display: grid; place-items: center; width: 37px; height: 37px; color: var(--blue-text); background: var(--blue-soft); border-radius: 5px; flex: none; }
 .summary-file { display: grid; gap: 2px; flex: 1; min-width: 0; }
