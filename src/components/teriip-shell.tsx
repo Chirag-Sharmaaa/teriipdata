@@ -21,7 +21,6 @@ export function TeriipShell({ children, eyebrow, title, description, actions }: 
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { activeCentre } = useDemoSettings();
-  const centreInitials = activeCentre.split(/\s+/).map((part) => part[0]).join("").slice(0, 2);
 
   return (
     <div className="app-frame">
