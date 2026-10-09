@@ -11,7 +11,7 @@ type DemoSettingsValue = {
 const DemoSettingsContext = createContext<DemoSettingsValue | null>(null);
 
 export function DemoSettingsProvider({ children }: { children: ReactNode }) {
-  const [activeCentre, setActiveCentre] = useState<string>(TERIIP_CENTRES[0]);
+  const [activeCentre, setActiveCentre] = useState<string>(TERIIP_CENTRES[0] ?? "AIIMS Bhopal");
   const [enabledExtensions, setEnabledExtensions] = useState<Record<string, boolean>>({});
   const value = useMemo(() => ({
     activeCentre,

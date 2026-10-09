@@ -39,11 +39,15 @@ function PageSection({ icon, title, detail, aside, children }: { icon: typeof Da
 
 export function DashboardView() {
   const { activeCentre: centre, setActiveCentre: setCentre } = useDemoSettings();
-  const metrics = demoCentreMetrics.find((item) => item.centre === centre) ?? demoCentreMetrics[0];
+  const nextCentre = () => {
+    const currentIndex = TERIIP_CENTRES.indexOf(centre as (typeof TERIIP_CENTRES)[number]);
+    setCentre(TERIIP_CENTRES[(currentIndex + 1) % TERIIP_CENTRES.length] ?? "AIIMS Bhopal");
+  };
+  const metrics = demoCentreMetrics.find((item) => item.centre === centre) ?? { records: 0, completeness: 0 };
   const totalRecords = demoCentreMetrics.reduce((sum, item) => sum + item.records, 0);
 
-  return <TeriipShell eyebrow="CENTRE WORKSPACE" title="Good morning, Demo staff" description="A clear view of synthetic research data activity for your centre." actions={<Button variant="outline" className="quiet-action" onClick={() => setCentre((current) => current === "AIIMS Bhopal" ? "Delhi" : "AIIMS Bhopal")}><RefreshCw size={15} /> Refresh preview</Button>}>
-    <div className="centre-strip"><div className="centre-ident"><span className="centre-monogram">AB</span><div><span className="small-label">CURRENT CENTRE</span><strong>{centre}</strong></div></div><div className="centre-meta"><span className="connection-dot" /> Preview data · refreshed just now <span className="meta-divider" /> <button onClick={() => setCentre((current) => current === "AIIMS Bhopal" ? "Delhi" : "AIIMS Bhopal")}>Change centre <ChevronDown size={13} /></button></div></div>
+  return <TeriipShell eyebrow="CENTRE WORKSPACE" title="Good morning, Demo staff" description="A clear view of synthetic research data activity for your centre." actions={<Button variant="outline" className="quiet-action" onClick={nextCentre}><RefreshCw size={15} /> Next centre</Button>}>
+    <div className="centre-strip"><div className="centre-ident"><span className="centre-monogram">{centre.split(/\s+/).map((part) => part[0]).join("").slice(0, 2)}</span><div><span className="small-label">CURRENT CENTRE</span><strong>{centre}</strong></div></div><div className="centre-meta"><span className="connection-dot" /> Preview data · refreshed just now <span className="meta-divider" /> <Button variant="ghost" size="sm" onClick={nextCentre}>Change centre <ChevronDown size={13} /></Button></div></div>
     <div className="metric-grid">
       <Metric label="PARTICIPANT RECORDS" value={compact.format(metrics.records)} change="8.2%" icon={Users} />
       <Metric label="DATA COMPLETENESS" value={`${metrics.completeness}%`} change="2.4%" icon={Gauge} color="teal" />
@@ -176,7 +180,7 @@ export function AdminView() {
         {visibleCentres.length === 0 && <div className="empty-state">No centre names match that search.</div>}
       </PageSection>
       <div className="admin-side-stack">
-        <PageSection icon={FlaskIcon} title="Optional fields" detail="Configure extensions explicitly by centre"><div className="extension-admin-controls"><label htmlFor="extension-centre">Centre</label><select className="standard-select" id="extension-centre" value={extensionCentre} onChange={(event) => setExtensionCentre(event.target.value)}>{TERIIP_CENTRES.map((centreName) => <option key={centreName}>{centreName}</option>)}</select><p>These are optional schema fields only; the brief does not identify which centre uses them.</p><label className="extension-toggle"><input type="checkbox" checked={enabledExtensions[extensionCentre] ?? false} onChange={(event) => setCentreExtensions(extensionCentre, event.target.checked)} /><span>Enable MRD No and ABO &amp; Rh Blood grouping</span><small>For {extensionCentre}</small></label></div></PageSection>
+        <PageSection icon={FlaskConical} title="Optional fields" detail="Configure extensions explicitly by centre"><div className="extension-admin-controls"><label htmlFor="extension-centre">Centre</label><select className="standard-select" id="extension-centre" value={extensionCentre} onChange={(event) => setExtensionCentre(event.target.value)}>{TERIIP_CENTRES.map((centreName) => <option key={centreName}>{centreName}</option>)}</select><p>These are optional schema fields only; the brief does not identify which centre uses them.</p><label className="extension-toggle"><input type="checkbox" checked={enabledExtensions[extensionCentre] ?? false} onChange={(event) => setCentreExtensions(extensionCentre, event.target.checked)} /><span>Enable MRD No and ABO &amp; Rh Blood grouping</span><small>For {extensionCentre}</small></label></div></PageSection>
         <PageSection icon={FolderSync} title="Drive setup" detail="Connection and write destination"><div className="setup-empty"><div className="setup-icon"><FolderSync size={19} /></div><strong>No Drive connection</strong><p>Folder IDs, workbook destinations, and institutional credentials are not configured.</p><Button variant="outline" size="sm" disabled title="Not available in demo">Configuration unavailable</Button></div></PageSection>
         <PageSection icon={Users} title="User management" detail="Centre accounts"><div className="setup-empty small-setup"><div className="setup-icon"><Users size={18} /></div><strong>Account management disabled</strong><p>Secure sign-in and invitations are not available in this preview.</p></div></PageSection>
       </div>
