@@ -40,7 +40,7 @@ function PageSection({ icon, title, detail, aside, children }: { icon: typeof Da
 export function DashboardView() {
   const { activeCentre: centre, setActiveCentre: setCentre } = useDemoSettings();
   const nextCentre = () => {
-    const currentIndex = TERIIP_CENTRES.indexOf(centre as (typeof TERIIP_CENTRES)[number]);
+    const currentIndex = TERIIP_CENTRES.findIndex((knownCentre) => knownCentre === centre);
     setCentre(TERIIP_CENTRES[(currentIndex + 1) % TERIIP_CENTRES.length] ?? "AIIMS Bhopal");
   };
   const metrics = demoCentreMetrics.find((item) => item.centre === centre) ?? { records: 0, completeness: 0 };
