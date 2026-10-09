@@ -6,6 +6,7 @@ This project currently provides an interactive, synthetic-data-only preview of t
 
 - Centre dashboard and an all-centre administrator overview for the 16 named centres.
 - Editable review-table example for the complete common parameter list.
+- Explicit, in-memory administration of the two optional fields per centre.
 - Spreadsheet column-mapping example with synthetic rows.
 - Recent activity filters and status examples.
 - Mock Drive connection status, with no reads, uploads, or writes.

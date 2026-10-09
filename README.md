@@ -1,29 +1,34 @@
-# Welcome to your Lovable project
+# TERIIP Research Workspace — demonstration
 
-This project was built with [Lovable](https://lovable.dev).
+This project currently contains a **synthetic-data-only interactive preview** of a proposed multi-centre TERIIP research workspace. It is not the production data-processing system described in the uploaded brief. Do not enter real participant information or upload real reports.
 
-## Build with Lovable
+## Run locally
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requires Bun and a current supported Node.js version for the development toolchain.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
 
-## Built with
+Open the local address printed by Vite. Run available checks with `bun run test` and `bun run lint`.
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Preview screens
+
+- `/` — synthetic centre dashboard and recent activity.
+- `/upload` — editable fabricated PDF-review example; no file chooser or PDF processing.
+- `/import` — fabricated spreadsheet column mapping; no workbook upload or import.
+- `/activity` — synthetic activity examples and centre filter.
+- `/admin` — synthetic centre summaries and optional-field settings.
+
+All preview state is temporary React in-memory state. Refreshing resets changes. Drive status, data, and successful confirmations are examples only.
+
+## Read next
+
+- [Architecture](ARCHITECTURE.md)
+- [Security and privacy boundary](SECURITY.md)
+- [Data flow](DATA_FLOW.md)
+- [Parameter schema](PARAMETER_SCHEMA.md)
+- [Deployment status](DEPLOYMENT.md)
+- [Testing](TESTING.md)
+- [Demo scope and limitations](DEMO_SCOPE.md)
