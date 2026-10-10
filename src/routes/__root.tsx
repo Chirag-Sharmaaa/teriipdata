@@ -80,10 +80,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "TERIIP Research Workspace" },
-      { name: "description", content: "Synthetic-only workspace preview for TERIIP research data management." },
+      {
+        name: "description",
+        content: "Synthetic-only workspace preview for TERIIP research data management.",
+      },
       { name: "author", content: "TERIIP" },
       { property: "og:title", content: "TERIIP Research Workspace" },
-      { property: "og:description", content: "A synthetic-only preview of the TERIIP research workspace." },
+      {
+        property: "og:description",
+        content: "A synthetic-only preview of the TERIIP research workspace.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

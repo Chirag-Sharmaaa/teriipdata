@@ -13,12 +13,16 @@ const DemoSettingsContext = createContext<DemoSettingsValue | null>(null);
 export function DemoSettingsProvider({ children }: { children: ReactNode }) {
   const [activeCentre, setActiveCentre] = useState<string>(TERIIP_CENTRES[0] ?? "AIIMS Bhopal");
   const [enabledExtensions, setEnabledExtensions] = useState<Record<string, boolean>>({});
-  const value = useMemo(() => ({
-    activeCentre,
-    setActiveCentre,
-    enabledExtensions,
-    setCentreExtensions: (centre: string, enabled: boolean) => setEnabledExtensions((current) => ({ ...current, [centre]: enabled })),
-  }), [activeCentre, enabledExtensions]);
+  const value = useMemo(
+    () => ({
+      activeCentre,
+      setActiveCentre,
+      enabledExtensions,
+      setCentreExtensions: (centre: string, enabled: boolean) =>
+        setEnabledExtensions((current) => ({ ...current, [centre]: enabled })),
+    }),
+    [activeCentre, enabledExtensions],
+  );
 
   return <DemoSettingsContext.Provider value={value}>{children}</DemoSettingsContext.Provider>;
 }
