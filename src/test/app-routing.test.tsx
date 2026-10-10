@@ -30,14 +30,19 @@ describe("TERIIP parameter schema", () => {
     expect(COMMON_PARAMETERS[0]?.name).toBe("RecordID");
     expect(COMMON_PARAMETERS[1]?.name).toBe("Name");
     expect(COMMON_PARAMETERS.at(-1)?.name).toBe("PBS");
-    expect(new Set(COMMON_PARAMETERS.map((parameter) => parameter.name)).size).toBe(COMMON_PARAMETERS.length);
+    expect(new Set(COMMON_PARAMETERS.map((parameter) => parameter.name)).size).toBe(
+      COMMON_PARAMETERS.length,
+    );
     // The brief's explicit column list contains 72 entries, despite referring to 66–67.
     expect(COMMON_PARAMETERS).toHaveLength(72);
   });
 
   it("keeps centre extensions separate from the common schema", () => {
     expect(TERIIP_CENTRES).toHaveLength(16);
-    expect(CENTRE_EXTENSIONS.map((parameter) => parameter.name)).toEqual(["MRD No", "ABO & Rh Blood grouping"]);
+    expect(CENTRE_EXTENSIONS.map((parameter) => parameter.name)).toEqual([
+      "MRD No",
+      "ABO & Rh Blood grouping",
+    ]);
     expect(COMMON_PARAMETERS.some((parameter) => parameter.name === "MRD No")).toBe(false);
   });
 });
