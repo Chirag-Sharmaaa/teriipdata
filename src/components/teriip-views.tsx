@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -400,12 +400,8 @@ export function UploadView() {
   const parameters = extensionsForCentre
     ? [...COMMON_PARAMETERS, ...CENTRE_EXTENSIONS]
     : COMMON_PARAMETERS;
-  const shown = useMemo(
-    () =>
-      parameters.filter((parameter) =>
-        `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase()),
-      ),
-    [query, extensionsForCentre],
+  const shown = parameters.filter((parameter) =>
+    `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase()),
   );
   const populated = Object.values(fields).filter(Boolean).length;
 
