@@ -17,7 +17,7 @@ export type Parameter = {
 
 const group = (
   category: ParameterCategory,
-  names: Array<[string, string | undefined?, string[]?]>,
+  names: Array<[string, (string | undefined)?, string[]?]>,
 ): Parameter[] =>
   names.map(([name, unit, aliases]) => ({
     name,
