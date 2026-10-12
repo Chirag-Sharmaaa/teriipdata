@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { TeriipRole } from "@/lib/teriip-access";
+import type { Database } from "@/integrations/supabase/types";
 
-type ActorContext = { supabase: any; userId: string };
+type ActorContext = { supabase: SupabaseClient<Database>; userId: string };
 
 async function getActiveActor(context: ActorContext) {
   const { data, error } = await context.supabase

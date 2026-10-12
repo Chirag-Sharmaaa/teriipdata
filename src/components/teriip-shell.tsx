@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useDemoSettings } from "@/lib/teriip-demo-settings";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 
-const navigation = [
+  const navigation = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
   { label: "PDF review", to: "/upload", icon: FileUp },
   { label: "Excel import", to: "/import", icon: FileSpreadsheet },
