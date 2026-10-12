@@ -115,7 +115,7 @@ export function UserManagementView() {
       <Link to="/" className="auth-back-link"><ArrowLeft size={14} /> Back to workspace</Link>
       <div className="account-heading-row">
         <div><p className="eyebrow">CENTRE ACCESS</p><h1>Team accounts</h1><p className="page-description">{isSuperAdmin ? "Manage authorized Centre Admins and Staff across TERIIP." : `Manage Centre Staff assigned to ${allowedCentre ?? "your centre"}.`}</p></div>
-        <Button onClick={() => setInviteOpen((open) => !open)}><Plus size={15} /> Invite account</Button>
+        <Button disabled title="Secure account provisioning is not configured"><Plus size={15} /> Invite account</Button>
       </div>
 
       {inviteOpen && (
@@ -132,13 +132,14 @@ export function UserManagementView() {
         </section>
       )}
 
-      <div className="account-summary"><span><Users size={16} /> {availableAccounts.length} accounts in your scope</span><span><ShieldCheck size={15} /> Access changes are recorded</span></div>
+      <div className="workflow-safety account-provisioning-notice"><ShieldCheck size={16} /><div><strong>Account changes are paused.</strong><span> Secure user-provisioning access and the verified centre email roster are not configured. No invitations or account changes will be claimed as successful.</span></div></div>
+      <div className="account-summary"><span><Users size={16} /> {availableAccounts.length} accounts in your scope</span><span><ShieldCheck size={15} /> Account listing is limited to your assigned management scope</span></div>
       <div className="table-wrap account-table-wrap"><table className="data-table account-table"><thead><tr><th>ACCOUNT</th><th>ACCESS LEVEL</th><th>CENTRE</th><th>STATUS</th><th>MANAGE</th></tr></thead><tbody>
         {availableAccounts.map((item) => <tr key={item.userId}>
           <td><strong>{item.display_name || item.email || "TERIIP account"}</strong><span className="table-subline">{item.email ?? "Email unavailable"}{item.username ? ` · @${item.username}` : ""}</span></td>
           <td>{roleLabel(item.role)}</td><td>{item.centreId ?? "Headquarters"}</td>
           <td><span className={`mapping-indicator ${item.disabled ? "mapping-review" : ""}`}><span />{item.disabled ? "Disabled" : "Active"}</span></td>
-          <td><div className="account-actions"><Button variant="outline" size="sm" disabled={busyId === item.userId} onClick={() => void updateAccount(item)}><UserRoundCog size={14} /> Edit</Button><Button variant="outline" size="sm" disabled={busyId === item.userId} onClick={() => void changeStatus(item, item.disabled ? "enable" : "disable")}>{item.disabled ? "Enable" : "Disable"}</Button><Button variant="destructive" size="sm" disabled={busyId === item.userId} onClick={() => void deleteAccount(item)}>Delete</Button></div></td>
+          <td><div className="account-actions"><Button variant="outline" size="sm" disabled title="Account provisioning is not configured"><UserRoundCog size={14} /> Edit</Button><Button variant="outline" size="sm" disabled title="Account provisioning is not configured">{item.disabled ? "Enable" : "Disable"}</Button><Button variant="destructive" size="sm" disabled title="Account provisioning is not configured">Delete</Button></div></td>
         </tr>)}
       </tbody></table>{availableAccounts.length === 0 && <div className="empty-state">No other accounts are available in your management scope yet.</div>}</div>
     </div>

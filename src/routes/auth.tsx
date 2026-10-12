@@ -3,8 +3,8 @@ import { AuthView } from "@/components/teriip-auth-pages";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
-    next: typeof search.next === "string" ? search.next : undefined,
-    flow: search.flow === "invite" ? "invite" as const : undefined,
+    next: typeof search["next"] === "string" ? search["next"] : undefined,
+    flow: search["flow"] === "invite" ? "invite" as const : undefined,
   }),
   head: () => ({
     meta: [
