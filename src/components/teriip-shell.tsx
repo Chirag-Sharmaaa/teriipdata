@@ -59,7 +59,7 @@ export function TeriipShell({
         </Link>
         <div className="workspace-label">WORKSPACE</div>
         <nav className="side-nav" aria-label="Main navigation">
-          {navigation.map(({ label, to, icon: Icon }) => {
+          {navigation.filter((item) => item.to !== "/admin" || !account || account.role === "super_admin").map(({ label, to, icon: Icon }) => {
             const active = pathname === to || (to !== "/" && pathname.startsWith(to));
             return (
               <Link key={to} to={to} className={`side-link${active ? " is-active" : ""}`}>

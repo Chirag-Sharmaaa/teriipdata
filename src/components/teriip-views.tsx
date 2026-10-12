@@ -859,9 +859,11 @@ export function ImportView() {
 }
 
 export function ActivityView() {
+  const { account } = useTeriipAuth();
+  const restrictedCentre = account?.role === "centre_admin" || account?.role === "centre_staff" ? account.centreId : null;
   const [filter, setFilter] = useState("All centres");
-  const rows =
-    filter === "All centres" ? demoActivity : demoActivity.filter((row) => row.centre === filter);
+  const effectiveFilter = restrictedCentre ?? filter;
+  const rows = effectiveFilter === "All centres" ? demoActivity : demoActivity.filter((row) => row.centre === effectiveFilter);
   return (
     <TeriipShell
       eyebrow="WORKSPACE HISTORY"
@@ -874,18 +876,7 @@ export function ActivityView() {
           <span>demo events</span>
         </div>
         <div className="activity-tools">
-          <label className="filter-label">Centre</label>
-          <select
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            aria-label="Filter by centre"
-            className="standard-select"
-          >
-            <option>All centres</option>
-            {TERIIP_CENTRES.map((name) => (
-              <option key={name}>{name}</option>
-            ))}
-          </select>
+          {restrictedCentre ? <span className="activity-centre-lock">{restrictedCentre}</span> : <><label className="filter-label" htmlFor="activity-centre">Centre</label><select id="activity-centre" value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filter by centre" className="standard-select"><option>All centres</option>{TERIIP_CENTRES.map((name) => <option key={name}>{name}</option>)}</select></>}
           <Button variant="outline" size="sm" className="quiet-action">
             <ArrowDownToLine size={15} /> Export view
           </Button>
@@ -896,7 +887,7 @@ export function ActivityView() {
         title="Submission history"
         detail="Only demo identifiers and status metadata are shown."
       >
-        <ActivityTable selectedCentre={filter === "All centres" ? undefined : filter} />
+        <ActivityTable selectedCentre={effectiveFilter === "All centres" ? undefined : effectiveFilter} />
       </PageSection>
       <div className="bottom-note">
         <ShieldCheck size={15} />
@@ -910,6 +901,7 @@ export function ActivityView() {
 }
 
 export function AdminView() {
+  const { account } = useTeriipAuth();
   const [selected, setSelected] = useState("ALL CENTRES");
   const [needle, setNeedle] = useState("");
   const visibleCentres = demoCentreMetrics.filter((item) =>
@@ -923,6 +915,16 @@ export function AdminView() {
   const avgCompleteness = Math.round(
     active.reduce((total, item) => total + item.completeness, 0) / active.length,
   );
+
+  if (account && account.role !== "super_admin") {
+    const centre = account.centreId;
+    const ownStats = demoCentreMetrics.find((item) => item.centre === centre);
+    return (
+      <TeriipShell eyebrow="CENTRE WORKSPACE" title="Admin overview" description="Only your assigned centre is available to this account.">
+        {ownStats ? <><div className="centre-strip"><div className="centre-ident"><span className="centre-monogram">{centre?.slice(0, 2).toUpperCase()}</span><div><span className="small-label">ASSIGNED CENTRE</span><strong>{centre}</strong></div></div></div><div className="metric-grid"><Metric label="PARTICIPATING CENTRES" value="01" change="Assigned centre" icon={Users} /><Metric label="SYNTHETIC RECORDS" value={compact.format(ownStats.records)} change="Fabricated data" icon={Database} color="teal" /><Metric label="DATA COMPLETENESS" value={`${ownStats.completeness}%`} change="Synthetic example" icon={Gauge} color="blue" /><Metric label="DRIVE STATUS" value="Offline" change="Not configured" icon={FolderSync} color="orange" /></div><PageSection icon={ClipboardCheck} title="Centre activity" detail="Synthetic examples for your assigned centre"><ActivityTable selectedCentre={centre ?? undefined} /></PageSection></> : <div className="workflow-safety"><ShieldCheck size={16} /><div><strong>Centre data is unavailable.</strong><span> Your assigned centre has not been verified for this preview.</span></div></div>}
+      </TeriipShell>
+    );
+  }
 
   return (
     <TeriipShell
