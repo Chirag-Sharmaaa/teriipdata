@@ -13,3 +13,4 @@
 
 - The current TERIIP workspace is a synthetic-only, in-memory TanStack Start demonstration with mock Drive status; this keeps the preview from processing real participant data or pretending that external writes succeeded.
 - Share temporary centre selection and optional-field configuration through a React context provider so the demo screens remain consistent without persisting participant-related data.
+- The requested target has changed to Lovable Cloud for managed authentication and backend data; keep private records and role/centre authorization server-enforced, and do not enable real-data workflows until Drive configuration and institutional privacy/security approvals are verified.
