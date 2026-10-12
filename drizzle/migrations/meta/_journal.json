@@ -1,5 +1,41 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791825317337,
+      "tag": "0000_teriip_access_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791825369768,
+      "tag": "0001_teriip_profile_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791825493251,
+      "tag": "0002_teriip_account_audit_controls",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791825580702,
+      "tag": "0003_teriip_profile_email",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791825722031,
+      "tag": "0004_teriip_profile_column_permissions",
+      "breakpoints": true
+    }
+  ]
 }

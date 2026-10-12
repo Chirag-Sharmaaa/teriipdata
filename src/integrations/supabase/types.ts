@@ -14,16 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      account_audit_events: {
+        Row: {
+          actor_user_id: string
+          centre_id: string | null
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          subject_user_id: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          centre_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          subject_user_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          centre_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          subject_user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          centre_id: string | null
+          created_at: string
+          disabled_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          centre_id?: string | null
+          created_at?: string
+          disabled_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          centre_id?: string | null
+          created_at?: string
+          disabled_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_manage_user: { Args: { _target_user_id: string }; Returns: boolean }
+      current_user_centre: { Args: never; Returns: string }
+      has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "centre_admin" | "centre_staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +235,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "centre_admin", "centre_staff"],
+    },
   },
 } as const
