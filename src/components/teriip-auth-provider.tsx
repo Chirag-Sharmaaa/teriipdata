@@ -131,7 +131,7 @@ export function TeriipAuthProvider({ children }: { children: ReactNode }) {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    await router.navigate({ to: "/auth", replace: true });
+    await router.navigate({ to: "/auth", search: { next: undefined, flow: undefined }, replace: true });
   }, [queryClient, router]);
 
   const value = useMemo(() => ({ account, authLoading, signOut }), [account, authLoading, signOut]);

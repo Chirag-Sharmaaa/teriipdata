@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, ArrowLeft, CheckCircle2, FlaskConical, KeyRound, MailCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -8,9 +8,8 @@ import { useTeriipAuth } from "@/components/teriip-auth-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { safeTeriipReturnPath } from "@/lib/teriip-access";
-import { Route as AuthRoute } from "@/routes/auth";
 
-function AuthFrame({ children }: { children: React.ReactNode }) {
+function AuthFrame({ children }: { children: ReactNode }) {
   return (
     <main className="teriip-auth-frame">
       <section className="teriip-auth-panel">
@@ -36,7 +35,7 @@ function InlineMessage({ message, kind = "error" }: { message: string; kind?: "e
 }
 
 export function AuthView() {
-  const { next, flow } = AuthRoute.useSearch();
+  const { next, flow } = useSearch({ from: "/auth" });
   const { account, authLoading, signOut } = useTeriipAuth();
   const navigate = useNavigate({ from: "/auth" });
   const [email, setEmail] = useState("");
@@ -130,7 +129,7 @@ export function AuthView() {
           <h1>Check your email</h1>
           <p className="auth-description">Open the TERIIP invitation link from your email to verify your address and set a password.</p>
           <div className="auth-message success"><MailCheck size={16} /><span>The invitation link is personal and expires. Ask your administrator to send a new one if it has expired.</span></div>
-          <Link to="/auth" className="auth-back-link"><ArrowLeft size={14} /> Back to sign in</Link>
+          <Link to="/auth" search={{ next: undefined, flow: undefined }} className="auth-back-link"><ArrowLeft size={14} /> Back to sign in</Link>
         </AuthFrame>
       );
     }
@@ -160,7 +159,7 @@ export function AuthView() {
         <h1>Account access is pending</h1>
         <p className="auth-description">This account does not yet have an active TERIIP centre role. Contact an authorized administrator.</p>
         <div className="auth-message success"><ShieldCheck size={16} /><span>Your sign-in is confirmed; no centre data is available until an administrator assigns access.</span></div>
-        <Button variant="outline" className="w-full" onClick={() => void signOut()}>Sign out</Button>
+          <Button variant="outline" className="w-full" onClick={() => void signOut()}>Sign out</Button>
       </AuthFrame>
     );
   }
@@ -246,7 +245,7 @@ export function ResetPasswordView() {
       {!recoveryReady ? (
         <>
           <p className="auth-description">Open the password-reset link sent to your registered email address to continue.</p>
-          <Link to="/auth" className="auth-back-link"><ArrowLeft size={14} /> Return to sign in</Link>
+        <Link to="/auth" search={{ next: undefined, flow: undefined }} className="auth-back-link"><ArrowLeft size={14} /> Return to sign in</Link>
         </>
       ) : (
         <>

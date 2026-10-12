@@ -16,6 +16,7 @@ import {
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useDemoSettings } from "@/lib/teriip-demo-settings";
+import { useTeriipAuth } from "@/components/teriip-auth-provider";
 
 const navigation = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -40,6 +41,9 @@ export function TeriipShell({
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { activeCentre } = useDemoSettings();
+  const { account, authLoading, signOut } = useTeriipAuth();
+  const activeCentreName = account?.centreId ?? activeCentre;
+  const initials = (account?.displayName || account?.email || "DS").split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "DS";
 
   return (
     <div className="app-frame">
@@ -79,14 +83,22 @@ export function TeriipShell({
             </Link>
           </Button>
         </div>
-        <button className="profile-row" type="button" aria-label="Demo user profile">
-          <span className="avatar-mark">DS</span>
-          <span className="profile-copy">
-            <strong>Demo staff</strong>
-            <small>{activeCentre} · Centre</small>
-          </span>
-          <ChevronDown size={14} />
-        </button>
+        {account ? (
+          <div className="account-nav">
+            <Link to="/_authenticated/settings" className="profile-row" aria-label="Account settings">
+              <span className="avatar-mark">{initials}</span>
+              <span className="profile-copy"><strong>{account.displayName || account.email || "TERIIP account"}</strong><small>{account.role === "super_admin" ? "Super Admin" : account.role === "centre_admin" ? "Centre Admin" : account.role === "centre_staff" ? `${activeCentreName} · Centre Staff` : "Access pending"}</small></span>
+              <ChevronDown size={14} />
+            </Link>
+            <div className="account-links"><Link to="/_authenticated/settings">Settings</Link>{(account.role === "super_admin" || account.role === "centre_admin") && <Link to="/_authenticated/manage-users">Team accounts</Link>}<Button variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</Button></div>
+          </div>
+        ) : authLoading ? (
+          <div className="profile-row"><span className="avatar-mark">···</span><span className="profile-copy"><strong>Checking access</strong><small>Secure account</small></span></div>
+        ) : (
+          <Link to="/auth" search={{ next: undefined, flow: undefined }} className="profile-row" aria-label="Sign in">
+            <span className="avatar-mark">DS</span><span className="profile-copy"><strong>Sign in</strong><small>Authorized accounts</small></span><ChevronDown size={14} />
+          </Link>
+        )}
       </aside>
 
       <div className="main-column">
@@ -103,7 +115,7 @@ export function TeriipShell({
             <Button variant="ghost" size="icon" aria-label="Notifications" title="Notifications">
               <Bell size={17} />
             </Button>
-            <span className="top-avatar">DS</span>
+            {account ? <span className="top-avatar">{initials}</span> : <Link to="/auth" search={{ next: undefined, flow: undefined }} className="top-avatar" aria-label="Sign in">DS</Link>}
           </div>
         </header>
 
