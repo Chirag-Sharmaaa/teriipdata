@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_audit_events: {
+        Row: {
+          actor_user_id: string
+          centre_id: string | null
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          subject_user_id: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          centre_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          subject_user_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          centre_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          subject_user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -39,6 +69,7 @@ export type Database = {
         Row: {
           centre_id: string | null
           created_at: string
+          disabled_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
@@ -46,6 +77,7 @@ export type Database = {
         Insert: {
           centre_id?: string | null
           created_at?: string
+          disabled_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
@@ -53,6 +85,7 @@ export type Database = {
         Update: {
           centre_id?: string | null
           created_at?: string
+          disabled_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
