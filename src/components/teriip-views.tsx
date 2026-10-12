@@ -45,6 +45,7 @@ import { SectionTitle, TeriipShell } from "@/components/teriip-shell";
 import { COMMON_PARAMETERS, CENTRE_EXTENSIONS, TERIIP_CENTRES } from "@/lib/teriip-schema";
 import { useDemoSettings } from "@/lib/teriip-demo-settings";
 import { demoActivity, demoCentreMetrics, demoTrend } from "@/lib/teriip-demo-data";
+import { useTeriipAuth } from "@/components/teriip-auth-provider";
 
 const compact = new Intl.NumberFormat("en-IN");
 
@@ -186,31 +187,57 @@ function PageSection({
 
 export function DashboardView() {
   const { activeCentre: centre, setActiveCentre: setCentre } = useDemoSettings();
-  const nextCentre = () => {
-    const currentIndex = TERIIP_CENTRES.findIndex((knownCentre) => knownCentre === centre);
-    setCentre(TERIIP_CENTRES[(currentIndex + 1) % TERIIP_CENTRES.length] ?? "AIIMS Bhopal");
-  };
-  const metrics = demoCentreMetrics.find((item) => item.centre === centre) ?? {
+  const { account } = useTeriipAuth();
+  const isSuperAdmin = account?.role === "super_admin";
+  const ownCentre = account?.role === "centre_admin" || account?.role === "centre_staff" ? account.centreId : null;
+  const visibleCentre = ownCentre ?? centre;
+  const metrics = demoCentreMetrics.find((item) => item.centre === visibleCentre) ?? {
     records: 0,
     completeness: 0,
   };
   const totalRecords = demoCentreMetrics.reduce((sum, item) => sum + item.records, 0);
+  const overallCompleteness = Math.round(demoCentreMetrics.reduce((sum, item) => sum + item.completeness, 0) / demoCentreMetrics.length);
+  const displayName = account?.displayName || account?.email?.split("@")[0] || "Demo staff";
 
   return (
     <TeriipShell
-      eyebrow="CENTRE WORKSPACE"
-      title="Good morning, Demo staff"
-      description="A clear view of synthetic research data activity for your centre."
-      actions={
-        <Button variant="outline" className="quiet-action" onClick={nextCentre}>
-          <RefreshCw size={15} /> Next centre
-        </Button>
-      }
+      eyebrow={isSuperAdmin ? "HEADQUARTERS WORKSPACE" : "CENTRE WORKSPACE"}
+      title={`Good morning, ${displayName}`}
+      description={isSuperAdmin ? "Review combined synthetic indicators and a selected centre." : "A clear view of synthetic research data activity for your centre."}
     >
+      {isSuperAdmin && (
+        <section className="overall-dashboard" aria-labelledby="overall-dashboard-title">
+          <div className="overall-dashboard-heading">
+            <div><p className="small-label">HEADQUARTERS · ALL CENTRES</p><h2 id="overall-dashboard-title">Combined overview</h2></div>
+            <Badge variant="outline" className="demo-tag">SYNTHETIC</Badge>
+          </div>
+          <div className="metric-grid">
+            <Metric label="PARTICIPATING CENTRES" value={String(TERIIP_CENTRES.length)} change="Preview list" icon={Users} />
+            <Metric label="SYNTHETIC RECORDS" value={compact.format(totalRecords)} change="Fabricated total" icon={Database} color="teal" />
+            <Metric label="AVG. COMPLETENESS" value={`${overallCompleteness}%`} change="Across centres" icon={Gauge} color="blue" />
+            <Metric label="DRIVE STATUS" value="Offline" change="Not configured" icon={FolderSync} color="orange" />
+          </div>
+          <PageSection icon={Activity} title="Combined trend" detail="Monthly additions · synthetic dataset">
+            <div className="chart-summary"><strong>{compact.format(totalRecords)}</strong><span>example records across listed centres</span></div>
+            <div className="chart-box">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={demoTrend} margin={{ top: 12, right: 4, bottom: 0, left: -18 }}>
+                  <defs><linearGradient id="overall-records-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--chart-green)" stopOpacity={0.2} /><stop offset="95%" stopColor="var(--chart-green)" stopOpacity={0.01} /></linearGradient></defs>
+                  <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "var(--chart-label)", fontSize: 11 }} dy={9} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--chart-label)", fontSize: 11 }} />
+                  <Tooltip contentStyle={{ borderRadius: 6, borderColor: "var(--border)", background: "var(--popover)", color: "var(--popover-foreground)" }} />
+                  <Area type="monotone" dataKey="records" stroke="var(--chart-green)" strokeWidth={2.5} fill="url(#overall-records-fill)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </PageSection>
+        </section>
+      )}
       <div className="centre-strip">
         <div className="centre-ident">
           <span className="centre-monogram">
-            {centre
+            {visibleCentre
               .split(/\s+/)
               .map((part) => part[0])
               .join("")
@@ -218,15 +245,12 @@ export function DashboardView() {
           </span>
           <div>
             <span className="small-label">CURRENT CENTRE</span>
-            <strong>{centre}</strong>
+            <strong>{visibleCentre}</strong>
           </div>
         </div>
         <div className="centre-meta">
-          <span className="connection-dot" /> Preview data · refreshed just now{" "}
-          <span className="meta-divider" />{" "}
-          <Button variant="ghost" size="sm" onClick={nextCentre}>
-            Change centre <ChevronDown size={13} />
-          </Button>
+          <span className="connection-dot" /> Preview data · refreshed just now
+          {isSuperAdmin && <><span className="meta-divider" /><label className="centre-picker-label" htmlFor="dashboard-centre-picker">Centre</label><select id="dashboard-centre-picker" className="standard-select centre-picker" value={centre} onChange={(event) => setCentre(event.target.value)} aria-label="Select centre dashboard">{TERIIP_CENTRES.map((name) => <option key={name}>{name}</option>)}</select></>}
         </div>
       </div>
       <div className="metric-grid">
@@ -361,7 +385,7 @@ export function DashboardView() {
           </Button>
         }
       >
-        <ActivityTable selectedCentre={centre} />
+          <ActivityTable selectedCentre={visibleCentre} />
       </PageSection>
 
       <div className="bottom-note">
@@ -886,9 +910,7 @@ export function ActivityView() {
 }
 
 export function AdminView() {
-  const { enabledExtensions, setCentreExtensions } = useDemoSettings();
   const [selected, setSelected] = useState("ALL CENTRES");
-  const [extensionCentre, setExtensionCentre] = useState("AIIMS Bhopal");
   const [needle, setNeedle] = useState("");
   const visibleCentres = demoCentreMetrics.filter((item) =>
     item.centre.toLowerCase().includes(needle.toLowerCase()),
@@ -1058,38 +1080,6 @@ export function AdminView() {
         </PageSection>
         <div className="admin-side-stack">
           <PageSection
-            icon={FlaskConical}
-            title="Optional fields"
-            detail="Configure extensions explicitly by centre"
-          >
-            <div className="extension-admin-controls">
-              <label htmlFor="extension-centre">Centre</label>
-              <select
-                className="standard-select"
-                id="extension-centre"
-                value={extensionCentre}
-                onChange={(event) => setExtensionCentre(event.target.value)}
-              >
-                {TERIIP_CENTRES.map((centreName) => (
-                  <option key={centreName}>{centreName}</option>
-                ))}
-              </select>
-              <p>
-                These are optional schema fields only; the brief does not identify which centre uses
-                them.
-              </p>
-              <label className="extension-toggle">
-                <input
-                  type="checkbox"
-                  checked={enabledExtensions[extensionCentre] ?? false}
-                  onChange={(event) => setCentreExtensions(extensionCentre, event.target.checked)}
-                />
-                <span>Enable MRD No and ABO &amp; Rh Blood grouping</span>
-                <small>For {extensionCentre}</small>
-              </label>
-            </div>
-          </PageSection>
-          <PageSection
             icon={FolderSync}
             title="Drive setup"
             detail="Connection and write destination"
@@ -1108,13 +1098,7 @@ export function AdminView() {
             </div>
           </PageSection>
           <PageSection icon={Users} title="User management" detail="Centre accounts">
-            <div className="setup-empty small-setup">
-              <div className="setup-icon">
-                <Users size={18} />
-              </div>
-              <strong>Account management disabled</strong>
-              <p>Secure sign-in and invitations are not available in this preview.</p>
-            </div>
+            <div className="setup-empty small-setup"><div className="setup-icon"><Users size={18} /></div><strong>Invite-only access</strong><p>Secure sign-in is available. Account provisioning is paused until the verified user roster is supplied.</p><Button variant="outline" size="sm" asChild><Link to="/auth" search={{ next: undefined, flow: undefined }}>Sign in</Link></Button></div>
           </PageSection>
         </div>
       </div>
