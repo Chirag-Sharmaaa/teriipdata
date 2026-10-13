@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 import { listManageableAccounts } from "@/lib/account-management.functions";
 import { manageableAccountsQueryOptions } from "@/lib/account-management.queries";
@@ -36,7 +35,6 @@ export function UserManagementView() {
   const { data, isPending, isError } = useQuery(manageableAccountsQueryOptions(() => listAccounts()));
   const accounts = (data && typeof data === "object" && "accounts" in data ? data.accounts : []) as AccountRow[];
   const isSuperAdmin = data && typeof data === "object" && "actorRole" in data && data.actorRole === "super_admin";
-  const allowedCentre = isSuperAdmin ? null : account?.centreId ?? null;
   const availableAccounts = useMemo(() => accounts.filter((item) => item.userId !== account?.id), [account?.id, accounts]);
 
   return (
