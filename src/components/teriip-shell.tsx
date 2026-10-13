@@ -85,12 +85,12 @@ export function TeriipShell({
         </div>
         {account ? (
           <div className="account-nav">
-            <Link to="/_authenticated/settings" className="profile-row" aria-label="Account settings">
+            <Link to="/settings" className="profile-row" aria-label="Account settings">
               <span className="avatar-mark">{initials}</span>
               <span className="profile-copy"><strong>{account.displayName || account.email || "TERIIP account"}</strong><small>{account.role === "super_admin" ? "Super Admin" : account.role === "centre_admin" ? "Centre Admin" : account.role === "centre_staff" ? `${activeCentreName} · Centre Staff` : "Access pending"}</small></span>
               <ChevronDown size={14} />
             </Link>
-            <div className="account-links"><Link to="/_authenticated/settings">Settings</Link>{(account.role === "super_admin" || account.role === "centre_admin") && <Link to="/_authenticated/manage-users">Team accounts</Link>}<Button variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</Button></div>
+            <div className="account-links"><Link to="/settings">Settings</Link>{(account.role === "super_admin" || account.role === "centre_admin") && <Link to="/manage-users">Team accounts</Link>}<Button variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</Button></div>
           </div>
         ) : authLoading ? (
           <div className="profile-row"><span className="avatar-mark">···</span><span className="profile-copy"><strong>Checking access</strong><small>Secure account</small></span></div>

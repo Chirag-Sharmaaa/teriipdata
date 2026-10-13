@@ -20,11 +20,6 @@ type AccountRow = {
   display_name: string | null;
 };
 
-const roles: Array<{ value: ManagedRole; label: string }> = [
-  { value: "centre_admin", label: "Centre Admin" },
-  { value: "centre_staff", label: "Centre Staff" },
-];
-
 function roleLabel(role: TeriipRole) {
   return role === "super_admin" ? "Super Admin" : role === "centre_admin" ? "Centre Admin" : "Centre Staff";
 }
@@ -34,14 +29,14 @@ export function UserManagementView() {
   const listAccounts = useServerFn(listManageableAccounts);
   const { data, isPending, isError } = useQuery(manageableAccountsQueryOptions(() => listAccounts()));
   const accounts = (data && typeof data === "object" && "accounts" in data ? data.accounts : []) as AccountRow[];
-  const isSuperAdmin = data && typeof data === "object" && "actorRole" in data && data.actorRole === "super_admin";
+  const isSuperAdmin = Boolean(data && typeof data === "object" && "actorRole" in data && data.actorRole === "super_admin");
   const availableAccounts = useMemo(() => accounts.filter((item) => item.userId !== account?.id), [account?.id, accounts]);
 
   return (
     <div className="account-settings-page user-management-page">
       <Link to="/" className="auth-back-link"><ArrowLeft size={14} /> Back to workspace</Link>
       <div className="account-heading-row">
-        <div><p className="eyebrow">CENTRE ACCESS</p><h1>Team accounts</h1><p className="page-description">{isSuperAdmin ? "Manage authorized Centre Admins and Staff across TERIIP." : `Manage Centre Staff assigned to ${allowedCentre ?? "your centre"}.`}</p></div>
+        <div><p className="eyebrow">CENTRE ACCESS</p><h1>Team accounts</h1><p className="page-description">{isSuperAdmin ? "Manage authorized Centre Admins and Staff across TERIIP." : `Manage Centre Staff assigned to ${account?.centreId ?? "your centre"}.`}</p></div>
         <Button disabled title="Secure account provisioning is not configured">Invite account</Button>
       </div>
 
