@@ -1,8 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
-import { listManageableAccounts } from "@/lib/account-management.functions";
-
-export const manageableAccountsQueryOptions = queryOptions({
-  queryKey: ["teriip", "manageable-accounts"],
-  queryFn: () => listManageableAccounts(),
-  staleTime: 30_000,
-});
+export function manageableAccountsQueryOptions(fetchAccounts: () => Promise<unknown>) {
+  return queryOptions({
+    queryKey: ["teriip", "manageable-accounts"],
+    queryFn: fetchAccounts,
+    staleTime: 30_000,
+  });
+}
