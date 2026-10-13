@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 import { CENTRE_EXTENSIONS, COMMON_PARAMETERS, TERIIP_CENTRES } from "@/lib/teriip-schema";
-import { canManageTeriipRole, safeTeriipReturnPath } from "@/lib/teriip-access";
+import { canManageTeriipRole, centreForWorkspace, safeTeriipReturnPath } from "@/lib/teriip-access";
 
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
@@ -43,6 +43,12 @@ describe("TERIIP access boundaries", () => {
     expect(safeTeriipReturnPath("/activity?filter=Delhi")).toBe("/activity");
     expect(safeTeriipReturnPath("https://attacker.example/" )).toBe("/");
     expect(safeTeriipReturnPath("/unknown")).toBe("/");
+  });
+
+  it("locks centre users to their assigned centre while leaving the synthetic preview selectable", () => {
+    expect(centreForWorkspace("centre_staff", "Delhi", "AIIMS Bhopal")).toBe("Delhi");
+    expect(centreForWorkspace("centre_admin", "Guwahati", "Delhi")).toBe("Guwahati");
+    expect(centreForWorkspace(null, null, "Delhi")).toBe("Delhi");
   });
 });
 

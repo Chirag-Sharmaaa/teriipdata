@@ -250,7 +250,7 @@ export function DashboardView() {
         </div>
         <div className="centre-meta">
           <span className="connection-dot" /> Preview data · refreshed just now
-          {isSuperAdmin && <><span className="meta-divider" /><label className="centre-picker-label" htmlFor="dashboard-centre-picker">Centre</label><select id="dashboard-centre-picker" className="standard-select centre-picker" value={centre} onChange={(event) => setCentre(event.target.value)} aria-label="Select centre dashboard">{TERIIP_CENTRES.map((name) => <option key={name}>{name}</option>)}</select></>}
+          {(isSuperAdmin || !account) && <><span className="meta-divider" /><label className="centre-picker-label" htmlFor="dashboard-centre-picker">Centre</label><select id="dashboard-centre-picker" className="standard-select centre-picker" value={centre} onChange={(event) => setCentre(event.target.value)} aria-label="Select centre dashboard">{TERIIP_CENTRES.map((name) => <option key={name}>{name}</option>)}</select></>}
         </div>
       </div>
       <div className="metric-grid">
