@@ -43,7 +43,12 @@ export function TeriipShell({
   const { activeCentre } = useDemoSettings();
   const { account, authLoading, signOut } = useTeriipAuth();
   const activeCentreName = account?.centreId ?? activeCentre;
-  const initials = (account?.displayName || account?.email || "DS").split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "DS";
+  const initials = (account?.displayName || account?.email || "DS")
+    .split(/[\s@._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "DS";
 
   return (
     <div className="app-frame">

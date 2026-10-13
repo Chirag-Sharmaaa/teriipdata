@@ -3,7 +3,9 @@ import { TERIIP_CENTRES } from "@/lib/teriip-schema";
 export type TeriipRole = "super_admin" | "centre_admin" | "centre_staff";
 export type ManagedRole = Exclude<TeriipRole, "super_admin">;
 
-export function isKnownCentre(centre: string | null | undefined): centre is (typeof TERIIP_CENTRES)[number] {
+export function isKnownCentre(
+  centre: string | null | undefined,
+): centre is (typeof TERIIP_CENTRES)[number] {
   return centre != null && TERIIP_CENTRES.includes(centre as (typeof TERIIP_CENTRES)[number]);
 }
 
