@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { safeTeriipReturnPath } from "@/lib/teriip-access";
 
 function AuthFrame({ children }: { children: ReactNode }) {
@@ -110,16 +109,6 @@ export function AuthView() {
     await navigate({ to: "/", replace: true });
   }
 
-  async function googleSignIn() {
-    setError("");
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: "select_account" },
-    });
-    if (result.error) setError("Google sign-in could not be started. Please try email and password instead.");
-    else if (!result.redirected) await finishLogin();
-  }
-
   if (flow === "invite") {
     if (authLoading) return <AuthFrame><div className="auth-loading">Checking your invitation…</div></AuthFrame>;
     if (!account) {
@@ -158,7 +147,7 @@ export function AuthView() {
         <p className="eyebrow">ACCESS STATUS</p>
         <h1>Account access is pending</h1>
         <p className="auth-description">This account does not yet have an active TERIIP centre role. Contact an authorized administrator.</p>
-        <div className="auth-message success"><ShieldCheck size={16} /><span>Your sign-in is confirmed; no centre data is available until an administrator assigns access.</span></div>
+        <div className="auth-message success"><ShieldCheck size={16} /><span>{account.disabled ? "This account is disabled. Contact an authorized TERIIP administrator to restore access." : "Your sign-in is confirmed; no centre data is available until an administrator assigns access."}</span></div>
           <Button variant="outline" className="w-full" onClick={() => void signOut()}>Sign out</Button>
       </AuthFrame>
     );
@@ -195,8 +184,6 @@ export function AuthView() {
         {error && <InlineMessage message={error} />}
         <Button type="submit" disabled={busy} className="w-full">{busy ? "Signing in…" : "Sign in"}</Button>
       </form>
-      <div className="auth-divider"><span /> <small>OR</small> <span /></div>
-      <Button type="button" variant="outline" className="w-full" disabled={busy} onClick={() => void googleSignIn()}>Continue with Google</Button>
       <p className="auth-invite-note"><KeyRound size={13} /> Access is by invitation only. Public account creation is disabled.</p>
     </AuthFrame>
   );

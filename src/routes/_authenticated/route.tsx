@@ -6,7 +6,7 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      throw redirect({ to: "/auth", search: { next: location.href, flow: undefined } });
+      throw redirect({ to: "/auth", search: { next: location.pathname, flow: undefined } });
     }
     const { data: membership, error: roleError } = await supabase
       .from("user_roles")
