@@ -200,7 +200,7 @@ export function DashboardView() {
   const overallCompleteness = Math.round(
     demoCentreMetrics.reduce((sum, item) => sum + item.completeness, 0) / demoCentreMetrics.length,
   );
-  const displayName = account?.displayName || account?.email?.split("@")[0] || "Demo staff";
+  const displayName = account?.displayName || account?.username || "there";
 
   return (
     <TeriipShell
