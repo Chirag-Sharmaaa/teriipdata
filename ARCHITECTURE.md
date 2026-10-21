@@ -6,9 +6,9 @@ The current runnable application is a TanStack Start v1, React 19, TypeScript, a
 
 There is no production data-processing API, OCR engine, or Drive client. No real TERIIP accounts have been provisioned, account invitation or role-change operations are disabled, and no account-audit writes are enabled. Confirm actions on the PDF and Excel screens only change the displayed synthetic demo state.
 
-## Target described in the project brief (not implemented)
+## Production work still required
 
-The brief calls for a Python 3.12+ FastAPI service, local PDF extraction (PyMuPDF/pdfplumber/Tesseract), Excel reading/writing, Google Drive integration, institutional authentication, isolated centre access, administrator functions, validation, and persistent audit events. These must be designed and implemented as a separately reviewed institutional service before any real-data use. The current hosted preview runtime is not that institutional Python deployment target.
+The current project target is Lovable Cloud for managed authentication and backend data, with the existing TanStack Start Worker frontend. This is not a local Python/FastAPI processing service. No Drive connector, institution-approved health-data hosting decision, PDF/OCR processor, Excel writer, secure account-provisioning lifecycle, audit-event writer, or verified retention and validation policy is implemented. Build and independently review these before any real-data use; keep participant-data operations disabled until institutional approval.
 
 ## Structural decisions
 
