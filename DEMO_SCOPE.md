@@ -16,7 +16,7 @@ This project currently provides an interactive, synthetic-data-only preview of t
 
 No TERIIP accounts or role assignments have been provisioned. Secure account invitations and account changes remain paused; the protected team view can only list accounts that an authenticated administrator is authorized to see. There is no PDF parsing, local OCR, actual file upload, spreadsheet parser, workbook writing, Google Drive connection, or verified production email delivery. A protected account-audit table exists, but account changes are not enabled and no audit writes are currently produced. The preview does not provide a secure place to enter real participant information. Do not upload, paste, or enter real reports or participant data.
 
-The uploaded brief requests a local Python/FastAPI service and institution-approved deployment. The current application template runs TanStack Start on a Worker, so this preview does not substitute browser-only logic or Lovable Cloud for the requested local processing/security boundary. Implementing real-data functions requires a separately approved institutional runtime, retention policy, access-control design, and deployment/security review.
+Production work is not complete in this preview. The current application template runs TanStack Start on a Worker with Lovable Cloud authentication and database policies; it is not a local Python/FastAPI processing service. Implementing real-data functions requires a confirmed hosting/privacy decision, verified Drive account and destination mappings, approved retention and validation rules, secure account provisioning and audit writes, plus deployment/security review.
 
 ## Schema note
 
