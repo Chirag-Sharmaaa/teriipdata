@@ -141,7 +141,7 @@ function ActivityTable({ selectedCentre }: { selectedCentre?: string | undefined
         </tbody>
       </table>
       {rows.length === 0 && (
-        <div className="empty-state">No synthetic activity for this centre yet.</div>
+        <div className="empty-state">No sample activity for this centre yet.</div>
       )}
     </div>
   );
@@ -208,8 +208,8 @@ export function DashboardView() {
       title={`Good morning, ${displayName}`}
       description={
         isSuperAdmin
-          ? "Review combined synthetic indicators and a selected centre."
-          : "A clear view of synthetic research data activity for your centre."
+          ? "Review combined sample indicators and a selected centre."
+          : "A clear view of sample research data activity for your centre."
       }
     >
       {isSuperAdmin && (
@@ -231,7 +231,7 @@ export function DashboardView() {
               icon={Users}
             />
             <Metric
-              label="SYNTHETIC RECORDS"
+              label="SAMPLE RECORDS"
               value={compact.format(totalRecords)}
               change="Fabricated total"
               icon={Database}
@@ -255,7 +255,7 @@ export function DashboardView() {
           <PageSection
             icon={Activity}
             title="Combined trend"
-            detail="Monthly additions · synthetic dataset"
+            detail="Monthly additions · sample dataset"
           >
             <div className="chart-summary">
               <strong>{compact.format(totalRecords)}</strong>
@@ -369,7 +369,7 @@ export function DashboardView() {
         <PageSection
           icon={Activity}
           title="Records over time"
-          detail="Monthly additions · synthetic dataset"
+          detail="Monthly additions · sample dataset"
           aside={
             <Button variant="ghost" size="sm" className="range-button">
               Last 6 months <ChevronDown size={13} />
@@ -464,7 +464,7 @@ export function DashboardView() {
       <PageSection
         icon={ClipboardCheck}
         title="Recent activity"
-        detail="Latest synthetic workflow examples"
+        detail="Latest sample workflow examples"
         aside={
           <Button variant="outline" size="sm" className="view-all" asChild>
             <Link to="/activity">
@@ -489,7 +489,7 @@ export function DashboardView() {
 
 const sampleValues: Record<string, string> = {
   RecordID: "DEMO-NEW-001",
-  Name: "Synthetic Participant",
+  Name: "Sample Participant",
   AGE: "34",
   Gender: "Female",
   "Blood Group": "O+",
@@ -521,7 +521,7 @@ export function UploadView() {
     <TeriipShell
       eyebrow="RECORD WORKFLOW"
       title="PDF report review"
-      description="Explore the review table with a fabricated participant report and synthetic values."
+      description="Explore the review table with a fabricated participant report and sample values."
       actions={
         <Button
           variant="outline"
@@ -542,7 +542,7 @@ export function UploadView() {
           <strong>Real report processing is disabled in this preview.</strong>
           <span>
             {" "}
-            Use the synthetic example below. Do not select, paste, or enter real participant
+            Use the sample example below. Do not select, paste, or enter real participant
             information.
           </span>
         </div>
@@ -632,7 +632,7 @@ export function UploadView() {
                           className={`review-state ${value ? "review-filled" : "review-missing"}`}
                         >
                           <span />
-                          {value ? "Synthetic value" : "Missing"}
+                          {value ? "Sample value" : "Missing"}
                         </span>
                       </td>
                     </tr>
@@ -654,7 +654,7 @@ export function UploadView() {
                 checked={checked}
                 onChange={(event) => setChecked(event.target.checked)}
               />
-              <span>I checked this synthetic example against its source</span>
+              <span>I checked this sample example against its source</span>
             </label>
             <Button
               className="primary-action"
@@ -677,7 +677,7 @@ export function UploadView() {
           </p>
           <div className="success-details">
             <span>
-              <CheckCircle2 size={15} /> Synthetic values confirmed
+              <CheckCircle2 size={15} /> Sample values confirmed
             </span>
             <span>
               <Database size={15} /> Mock destination · not connected
@@ -960,7 +960,7 @@ export function ActivityView() {
     <TeriipShell
       eyebrow="WORKSPACE HISTORY"
       title="Recent activity"
-      description="Synthetic examples of review and import workflow statuses."
+      description="Sample examples of review and import workflow statuses."
     >
       <div className="activity-toolbar">
         <div className="activity-count">
@@ -1058,7 +1058,7 @@ export function AdminView() {
                 icon={Users}
               />
               <Metric
-                label="SYNTHETIC RECORDS"
+                label="SAMPLE RECORDS"
                 value={compact.format(ownStats.records)}
                 change="Fabricated data"
                 icon={Database}
@@ -1067,7 +1067,7 @@ export function AdminView() {
               <Metric
                 label="DATA COMPLETENESS"
                 value={`${ownStats.completeness}%`}
-                change="Synthetic example"
+                change="Sample example"
                 icon={Gauge}
                 color="blue"
               />
@@ -1082,7 +1082,7 @@ export function AdminView() {
             <PageSection
               icon={ClipboardCheck}
               title="Centre activity"
-              detail="Synthetic examples for your assigned centre"
+              detail="Sample examples for your assigned centre"
             >
               <ActivityTable selectedCentre={centre ?? undefined} />
             </PageSection>
@@ -1104,7 +1104,7 @@ export function AdminView() {
     <TeriipShell
       eyebrow="CENTRAL OVERSIGHT"
       title="Admin overview"
-      description="Centre-level synthetic data and connection health at a glance."
+      description="Centre-level sample data and connection health at a glance."
       actions={
         <Button
           variant="outline"
@@ -1155,7 +1155,7 @@ export function AdminView() {
           icon={Users}
         />
         <Metric
-          label="SYNTHETIC RECORDS"
+          label="SAMPLE RECORDS"
           value={compact.format(recordCount)}
           change="Demo only"
           icon={Database}
@@ -1180,7 +1180,7 @@ export function AdminView() {
         <PageSection
           icon={Users}
           title="Centre overview"
-          detail="Synthetic records and completeness by centre"
+          detail="Sample records and completeness by centre"
           aside={
             <div className="search-field table-search">
               <Search size={14} />
@@ -1198,7 +1198,7 @@ export function AdminView() {
               <thead>
                 <tr>
                   <th>CENTRE</th>
-                  <th>DEMO RECORDS</th>
+                  <th>SAMPLE RECORDS</th>
                   <th>COMPLETENESS</th>
                   <th>CONNECTION</th>
                   <th aria-label="Actions" />
@@ -1295,7 +1295,7 @@ export function AdminView() {
       <PageSection
         icon={ClipboardCheck}
         title="Latest activity"
-        detail="Combined synthetic activity sample"
+        detail="Combined sample activity sample"
       >
         <ActivityTable />
       </PageSection>
