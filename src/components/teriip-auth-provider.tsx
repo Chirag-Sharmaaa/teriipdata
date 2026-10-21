@@ -12,7 +12,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { safeTeriipReturnPath, type TeriipRole } from "@/lib/teriip-access";
+import {
+  onboardingStage,
+  safeTeriipReturnPath,
+  type OnboardingStage,
+  type TeriipRole,
+} from "@/lib/teriip-access";
 
 export type TeriipAccount = {
   id: string;
@@ -23,12 +28,14 @@ export type TeriipAccount = {
   role: TeriipRole | null;
   centreId: string | null;
   disabled: boolean;
+  onboarding: OnboardingStage | null;
 };
 
 type TeriipAuthValue = {
   account: TeriipAccount | null;
   authLoading: boolean;
   signOut: () => Promise<void>;
+  refreshAccount: () => Promise<void>;
 };
 
 const TeriipAuthContext = createContext<TeriipAuthValue | null>(null);
@@ -44,6 +51,7 @@ function minimalAccount(user: User): TeriipAccount {
     role: null,
     centreId: null,
     disabled: false,
+    onboarding: onboardingStage(user.app_metadata),
   };
 }
 
@@ -155,7 +163,16 @@ export function TeriipAuthProvider({ children }: { children: ReactNode }) {
     });
   }, [queryClient, router]);
 
-  const value = useMemo(() => ({ account, authLoading, signOut }), [account, authLoading, signOut]);
+  const refreshAccount = useCallback(async () => {
+    await supabase.auth.refreshSession();
+    const version = ++generation.current;
+    await hydrateVerifiedUser(version);
+  }, [hydrateVerifiedUser]);
+
+  const value = useMemo(
+    () => ({ account, authLoading, signOut, refreshAccount }),
+    [account, authLoading, signOut, refreshAccount],
+  );
 
   return <TeriipAuthContext.Provider value={value}>{children}</TeriipAuthContext.Provider>;
 }
