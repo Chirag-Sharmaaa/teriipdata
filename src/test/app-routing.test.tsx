@@ -4,7 +4,16 @@ import { describe, expect, it } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 import { CENTRE_EXTENSIONS, COMMON_PARAMETERS, TERIIP_CENTRES } from "@/lib/teriip-schema";
-import { canManageTeriipRole, centreForWorkspace, safeTeriipReturnPath } from "@/lib/teriip-access";
+import {
+  canManageTeriipRole,
+  centreForWorkspace,
+  isTemporaryLoginEmail,
+  onboardingStage,
+  passwordProblem,
+  safeAccountLinkOrigin,
+  safeTeriipReturnPath,
+  teriipLoginEmail,
+} from "@/lib/teriip-access";
 
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
@@ -29,6 +38,7 @@ describe("App routing", () => {
       "/reset-password",
       "/settings",
       "/manage-users",
+      "/onboarding",
     ]) {
       expect(router.matchRoutes(path).at(-1)?.routeId).not.toBe(rootRouteId);
     }
@@ -80,5 +90,37 @@ describe("TERIIP parameter schema", () => {
       "ABO & Rh Blood grouping",
     ]);
     expect(COMMON_PARAMETERS.some((parameter) => parameter.name === "MRD No")).toBe(false);
+  });
+});
+
+describe("TERIIP first-login accounts", () => {
+  it("signs temporary usernames in on the reserved undeliverable domain", () => {
+    expect(teriipLoginEmail("  AIIMS-Bhopal-Admin ")).toBe(
+      "aiims-bhopal-admin@temp-login.teriip.invalid",
+    );
+    expect(teriipLoginEmail("Chirag.ICMR@gmail.com")).toBe("chirag.icmr@gmail.com");
+    expect(isTemporaryLoginEmail("delhi-admin@temp-login.teriip.invalid")).toBe(true);
+    expect(isTemporaryLoginEmail("chirag.icmr@gmail.com")).toBe(false);
+  });
+
+  it("reads only known first-login steps from account metadata", () => {
+    expect(onboardingStage({ teriip_onboarding: "email" })).toBe("email");
+    expect(onboardingStage({ teriip_onboarding: "password" })).toBe("password");
+    expect(onboardingStage({ teriip_onboarding: null })).toBeNull();
+    expect(onboardingStage({ teriip_onboarding: "admin" })).toBeNull();
+  });
+
+  it("requires a 12-character matching password", () => {
+    expect(passwordProblem("short", "short")).not.toBeNull();
+    expect(passwordProblem("twelve-chars", "twelve-chars")).toBeNull();
+    expect(passwordProblem("twelve-chars", "twelve-charz")).toBe("The passwords do not match.");
+  });
+
+  it("only sends account links back to TERIIP-hosted sites", () => {
+    expect(safeAccountLinkOrigin("https://teriipdata.lovable.app")).toBe(
+      "https://teriipdata.lovable.app",
+    );
+    expect(safeAccountLinkOrigin("https://attacker.example")).toBeNull();
+    expect(safeAccountLinkOrigin("https://teriipdata.lovable.app.attacker.example")).toBeNull();
   });
 });
