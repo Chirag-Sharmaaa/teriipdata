@@ -189,45 +189,115 @@ export function DashboardView() {
   const { activeCentre: centre, setActiveCentre: setCentre } = useDemoSettings();
   const { account } = useTeriipAuth();
   const isSuperAdmin = account?.role === "super_admin";
-  const ownCentre = account?.role === "centre_admin" || account?.role === "centre_staff" ? account.centreId : null;
+  const ownCentre =
+    account?.role === "centre_admin" || account?.role === "centre_staff" ? account.centreId : null;
   const visibleCentre = ownCentre ?? centre;
   const metrics = demoCentreMetrics.find((item) => item.centre === visibleCentre) ?? {
     records: 0,
     completeness: 0,
   };
   const totalRecords = demoCentreMetrics.reduce((sum, item) => sum + item.records, 0);
-  const overallCompleteness = Math.round(demoCentreMetrics.reduce((sum, item) => sum + item.completeness, 0) / demoCentreMetrics.length);
+  const overallCompleteness = Math.round(
+    demoCentreMetrics.reduce((sum, item) => sum + item.completeness, 0) / demoCentreMetrics.length,
+  );
   const displayName = account?.displayName || account?.email?.split("@")[0] || "Demo staff";
 
   return (
     <TeriipShell
       eyebrow={isSuperAdmin ? "HEADQUARTERS WORKSPACE" : "CENTRE WORKSPACE"}
       title={`Good morning, ${displayName}`}
-      description={isSuperAdmin ? "Review combined synthetic indicators and a selected centre." : "A clear view of synthetic research data activity for your centre."}
+      description={
+        isSuperAdmin
+          ? "Review combined synthetic indicators and a selected centre."
+          : "A clear view of synthetic research data activity for your centre."
+      }
     >
       {isSuperAdmin && (
         <section className="overall-dashboard" aria-labelledby="overall-dashboard-title">
           <div className="overall-dashboard-heading">
-            <div><p className="small-label">HEADQUARTERS · ALL CENTRES</p><h2 id="overall-dashboard-title">Combined overview</h2></div>
-            <Badge variant="outline" className="demo-tag">SYNTHETIC</Badge>
+            <div>
+              <p className="small-label">HEADQUARTERS · ALL CENTRES</p>
+              <h2 id="overall-dashboard-title">Combined overview</h2>
+            </div>
+            <Badge variant="outline" className="demo-tag">
+              SYNTHETIC
+            </Badge>
           </div>
           <div className="metric-grid">
-            <Metric label="PARTICIPATING CENTRES" value={String(TERIIP_CENTRES.length)} change="Preview list" icon={Users} />
-            <Metric label="SYNTHETIC RECORDS" value={compact.format(totalRecords)} change="Fabricated total" icon={Database} color="teal" />
-            <Metric label="AVG. COMPLETENESS" value={`${overallCompleteness}%`} change="Across centres" icon={Gauge} color="blue" />
-            <Metric label="DRIVE STATUS" value="Offline" change="Not configured" icon={FolderSync} color="orange" />
+            <Metric
+              label="PARTICIPATING CENTRES"
+              value={String(TERIIP_CENTRES.length)}
+              change="Preview list"
+              icon={Users}
+            />
+            <Metric
+              label="SYNTHETIC RECORDS"
+              value={compact.format(totalRecords)}
+              change="Fabricated total"
+              icon={Database}
+              color="teal"
+            />
+            <Metric
+              label="AVG. COMPLETENESS"
+              value={`${overallCompleteness}%`}
+              change="Across centres"
+              icon={Gauge}
+              color="blue"
+            />
+            <Metric
+              label="DRIVE STATUS"
+              value="Offline"
+              change="Not configured"
+              icon={FolderSync}
+              color="orange"
+            />
           </div>
-          <PageSection icon={Activity} title="Combined trend" detail="Monthly additions · synthetic dataset">
-            <div className="chart-summary"><strong>{compact.format(totalRecords)}</strong><span>example records across listed centres</span></div>
+          <PageSection
+            icon={Activity}
+            title="Combined trend"
+            detail="Monthly additions · synthetic dataset"
+          >
+            <div className="chart-summary">
+              <strong>{compact.format(totalRecords)}</strong>
+              <span>example records across listed centres</span>
+            </div>
             <div className="chart-box">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={demoTrend} margin={{ top: 12, right: 4, bottom: 0, left: -18 }}>
-                  <defs><linearGradient id="overall-records-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--chart-green)" stopOpacity={0.2} /><stop offset="95%" stopColor="var(--chart-green)" stopOpacity={0.01} /></linearGradient></defs>
+                  <defs>
+                    <linearGradient id="overall-records-fill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--chart-green)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--chart-green)" stopOpacity={0.01} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "var(--chart-label)", fontSize: 11 }} dy={9} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--chart-label)", fontSize: 11 }} />
-                  <Tooltip contentStyle={{ borderRadius: 6, borderColor: "var(--border)", background: "var(--popover)", color: "var(--popover-foreground)" }} />
-                  <Area type="monotone" dataKey="records" stroke="var(--chart-green)" strokeWidth={2.5} fill="url(#overall-records-fill)" />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--chart-label)", fontSize: 11 }}
+                    dy={9}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--chart-label)", fontSize: 11 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 6,
+                      borderColor: "var(--border)",
+                      background: "var(--popover)",
+                      color: "var(--popover-foreground)",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="records"
+                    stroke="var(--chart-green)"
+                    strokeWidth={2.5}
+                    fill="url(#overall-records-fill)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -250,7 +320,25 @@ export function DashboardView() {
         </div>
         <div className="centre-meta">
           <span className="connection-dot" /> Preview data · refreshed just now
-          {(isSuperAdmin || !account) && <><span className="meta-divider" /><label className="centre-picker-label" htmlFor="dashboard-centre-picker">Centre</label><select id="dashboard-centre-picker" className="standard-select centre-picker" value={centre} onChange={(event) => setCentre(event.target.value)} aria-label="Select centre dashboard">{TERIIP_CENTRES.map((name) => <option key={name}>{name}</option>)}</select></>}
+          {(isSuperAdmin || !account) && (
+            <>
+              <span className="meta-divider" />
+              <label className="centre-picker-label" htmlFor="dashboard-centre-picker">
+                Centre
+              </label>
+              <select
+                id="dashboard-centre-picker"
+                className="standard-select centre-picker"
+                value={centre}
+                onChange={(event) => setCentre(event.target.value)}
+                aria-label="Select centre dashboard"
+              >
+                {TERIIP_CENTRES.map((name) => (
+                  <option key={name}>{name}</option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       </div>
       <div className="metric-grid">
@@ -385,7 +473,7 @@ export function DashboardView() {
           </Button>
         }
       >
-          <ActivityTable selectedCentre={visibleCentre} />
+        <ActivityTable selectedCentre={visibleCentre} />
       </PageSection>
 
       <div className="bottom-note">
@@ -860,10 +948,14 @@ export function ImportView() {
 
 export function ActivityView() {
   const { account } = useTeriipAuth();
-  const restrictedCentre = account?.role === "centre_admin" || account?.role === "centre_staff" ? account.centreId : null;
+  const restrictedCentre =
+    account?.role === "centre_admin" || account?.role === "centre_staff" ? account.centreId : null;
   const [filter, setFilter] = useState("All centres");
   const effectiveFilter = restrictedCentre ?? filter;
-  const rows = effectiveFilter === "All centres" ? demoActivity : demoActivity.filter((row) => row.centre === effectiveFilter);
+  const rows =
+    effectiveFilter === "All centres"
+      ? demoActivity
+      : demoActivity.filter((row) => row.centre === effectiveFilter);
   return (
     <TeriipShell
       eyebrow="WORKSPACE HISTORY"
@@ -876,7 +968,27 @@ export function ActivityView() {
           <span>demo events</span>
         </div>
         <div className="activity-tools">
-          {restrictedCentre ? <span className="activity-centre-lock">{restrictedCentre}</span> : <><label className="filter-label" htmlFor="activity-centre">Centre</label><select id="activity-centre" value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filter by centre" className="standard-select"><option>All centres</option>{TERIIP_CENTRES.map((name) => <option key={name}>{name}</option>)}</select></>}
+          {restrictedCentre ? (
+            <span className="activity-centre-lock">{restrictedCentre}</span>
+          ) : (
+            <>
+              <label className="filter-label" htmlFor="activity-centre">
+                Centre
+              </label>
+              <select
+                id="activity-centre"
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+                aria-label="Filter by centre"
+                className="standard-select"
+              >
+                <option>All centres</option>
+                {TERIIP_CENTRES.map((name) => (
+                  <option key={name}>{name}</option>
+                ))}
+              </select>
+            </>
+          )}
           <Button variant="outline" size="sm" className="quiet-action">
             <ArrowDownToLine size={15} /> Export view
           </Button>
@@ -887,7 +999,9 @@ export function ActivityView() {
         title="Submission history"
         detail="Only demo identifiers and status metadata are shown."
       >
-        <ActivityTable selectedCentre={effectiveFilter === "All centres" ? undefined : effectiveFilter} />
+        <ActivityTable
+          selectedCentre={effectiveFilter === "All centres" ? undefined : effectiveFilter}
+        />
       </PageSection>
       <div className="bottom-note">
         <ShieldCheck size={15} />
@@ -920,8 +1034,68 @@ export function AdminView() {
     const centre = account.centreId;
     const ownStats = demoCentreMetrics.find((item) => item.centre === centre);
     return (
-      <TeriipShell eyebrow="CENTRE WORKSPACE" title="Admin overview" description="Only your assigned centre is available to this account.">
-        {ownStats ? <><div className="centre-strip"><div className="centre-ident"><span className="centre-monogram">{centre?.slice(0, 2).toUpperCase()}</span><div><span className="small-label">ASSIGNED CENTRE</span><strong>{centre}</strong></div></div></div><div className="metric-grid"><Metric label="PARTICIPATING CENTRES" value="01" change="Assigned centre" icon={Users} /><Metric label="SYNTHETIC RECORDS" value={compact.format(ownStats.records)} change="Fabricated data" icon={Database} color="teal" /><Metric label="DATA COMPLETENESS" value={`${ownStats.completeness}%`} change="Synthetic example" icon={Gauge} color="blue" /><Metric label="DRIVE STATUS" value="Offline" change="Not configured" icon={FolderSync} color="orange" /></div><PageSection icon={ClipboardCheck} title="Centre activity" detail="Synthetic examples for your assigned centre"><ActivityTable selectedCentre={centre ?? undefined} /></PageSection></> : <div className="workflow-safety"><ShieldCheck size={16} /><div><strong>Centre data is unavailable.</strong><span> Your assigned centre has not been verified for this preview.</span></div></div>}
+      <TeriipShell
+        eyebrow="CENTRE WORKSPACE"
+        title="Admin overview"
+        description="Only your assigned centre is available to this account."
+      >
+        {ownStats ? (
+          <>
+            <div className="centre-strip">
+              <div className="centre-ident">
+                <span className="centre-monogram">{centre?.slice(0, 2).toUpperCase()}</span>
+                <div>
+                  <span className="small-label">ASSIGNED CENTRE</span>
+                  <strong>{centre}</strong>
+                </div>
+              </div>
+            </div>
+            <div className="metric-grid">
+              <Metric
+                label="PARTICIPATING CENTRES"
+                value="01"
+                change="Assigned centre"
+                icon={Users}
+              />
+              <Metric
+                label="SYNTHETIC RECORDS"
+                value={compact.format(ownStats.records)}
+                change="Fabricated data"
+                icon={Database}
+                color="teal"
+              />
+              <Metric
+                label="DATA COMPLETENESS"
+                value={`${ownStats.completeness}%`}
+                change="Synthetic example"
+                icon={Gauge}
+                color="blue"
+              />
+              <Metric
+                label="DRIVE STATUS"
+                value="Offline"
+                change="Not configured"
+                icon={FolderSync}
+                color="orange"
+              />
+            </div>
+            <PageSection
+              icon={ClipboardCheck}
+              title="Centre activity"
+              detail="Synthetic examples for your assigned centre"
+            >
+              <ActivityTable selectedCentre={centre ?? undefined} />
+            </PageSection>
+          </>
+        ) : (
+          <div className="workflow-safety">
+            <ShieldCheck size={16} />
+            <div>
+              <strong>Centre data is unavailable.</strong>
+              <span> Your assigned centre has not been verified for this preview.</span>
+            </div>
+          </div>
+        )}
       </TeriipShell>
     );
   }
@@ -1100,7 +1274,21 @@ export function AdminView() {
             </div>
           </PageSection>
           <PageSection icon={Users} title="User management" detail="Centre accounts">
-            <div className="setup-empty small-setup"><div className="setup-icon"><Users size={18} /></div><strong>Invite-only access</strong><p>Secure sign-in is available. Account provisioning is paused until the verified user roster is supplied.</p><Button variant="outline" size="sm" asChild><Link to="/auth" search={{ next: undefined, flow: undefined }}>Sign in</Link></Button></div>
+            <div className="setup-empty small-setup">
+              <div className="setup-icon">
+                <Users size={18} />
+              </div>
+              <strong>Invite-only access</strong>
+              <p>
+                Secure sign-in is available. Account provisioning is paused until the verified user
+                roster is supplied.
+              </p>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth" search={{ next: undefined, flow: undefined }}>
+                  Sign in
+                </Link>
+              </Button>
+            </div>
           </PageSection>
         </div>
       </div>

@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import type { User } from "@supabase/supabase-js";
@@ -45,49 +54,52 @@ export function TeriipAuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const generation = useRef(0);
 
-  const hydrateVerifiedUser = useCallback(async (version: number) => {
-    const { data, error } = await supabase.auth.getUser();
-    if (generation.current !== version) return;
-    if (error || !data.user) {
-      setAccount(null);
-      setAuthLoading(false);
-      return;
-    }
-
-    const safeUser = data.user;
-    const [{ data: profile }, { data: membership }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("username, display_name")
-        .eq("id", safeUser.id)
-        .maybeSingle(),
-      supabase
-        .from("user_roles")
-        .select("role, centre_id, disabled_at")
-        .eq("user_id", safeUser.id)
-        .maybeSingle(),
-    ]);
-    if (generation.current !== version) return;
-
-    const nextAccount: TeriipAccount = {
-      ...minimalAccount(safeUser),
-      displayName: profile?.display_name ?? minimalAccount(safeUser).displayName,
-      username: profile?.username ?? null,
-      role: membership?.role ?? null,
-      centreId: membership?.centre_id ?? null,
-      disabled: Boolean(membership?.disabled_at),
-    };
-    setAccount(nextAccount);
-    setAuthLoading(false);
-
-    const queuedTarget = window.sessionStorage.getItem("teriip-auth-return");
-    if (queuedTarget) {
-      window.sessionStorage.removeItem("teriip-auth-return");
-      if (window.location.pathname === "/") {
-        void router.navigate({ to: safeTeriipReturnPath(queuedTarget) });
+  const hydrateVerifiedUser = useCallback(
+    async (version: number) => {
+      const { data, error } = await supabase.auth.getUser();
+      if (generation.current !== version) return;
+      if (error || !data.user) {
+        setAccount(null);
+        setAuthLoading(false);
+        return;
       }
-    }
-  }, [router]);
+
+      const safeUser = data.user;
+      const [{ data: profile }, { data: membership }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("username, display_name")
+          .eq("id", safeUser.id)
+          .maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role, centre_id, disabled_at")
+          .eq("user_id", safeUser.id)
+          .maybeSingle(),
+      ]);
+      if (generation.current !== version) return;
+
+      const nextAccount: TeriipAccount = {
+        ...minimalAccount(safeUser),
+        displayName: profile?.display_name ?? minimalAccount(safeUser).displayName,
+        username: profile?.username ?? null,
+        role: membership?.role ?? null,
+        centreId: membership?.centre_id ?? null,
+        disabled: Boolean(membership?.disabled_at),
+      };
+      setAccount(nextAccount);
+      setAuthLoading(false);
+
+      const queuedTarget = window.sessionStorage.getItem("teriip-auth-return");
+      if (queuedTarget) {
+        window.sessionStorage.removeItem("teriip-auth-return");
+        if (window.location.pathname === "/") {
+          void router.navigate({ to: safeTeriipReturnPath(queuedTarget) });
+        }
+      }
+    },
+    [router],
+  );
 
   useEffect(() => {
     const applySession = (user: User | null) => {
@@ -103,7 +115,12 @@ export function TeriipAuthProvider({ children }: { children: ReactNode }) {
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event !== "INITIAL_SESSION" && event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") {
+      if (
+        event !== "INITIAL_SESSION" &&
+        event !== "SIGNED_IN" &&
+        event !== "SIGNED_OUT" &&
+        event !== "USER_UPDATED"
+      ) {
         return;
       }
       if (event === "SIGNED_OUT") {
@@ -131,7 +148,11 @@ export function TeriipAuthProvider({ children }: { children: ReactNode }) {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    await router.navigate({ to: "/auth", search: { next: undefined, flow: undefined }, replace: true });
+    await router.navigate({
+      to: "/auth",
+      search: { next: undefined, flow: undefined },
+      replace: true,
+    });
   }, [queryClient, router]);
 
   const value = useMemo(() => ({ account, authLoading, signOut }), [account, authLoading, signOut]);

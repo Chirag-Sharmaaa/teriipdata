@@ -35,13 +35,7 @@ export function centreForWorkspace(
 }
 
 export type TeriipRoutePath =
-  | "/"
-  | "/upload"
-  | "/import"
-  | "/activity"
-  | "/admin"
-  | "/settings"
-  | "/manage-users";
+  "/" | "/upload" | "/import" | "/activity" | "/admin" | "/settings" | "/manage-users";
 
 const safeAppPaths = new Set<TeriipRoutePath>([
   "/",
@@ -57,7 +51,10 @@ export function safeTeriipReturnPath(value: unknown): TeriipRoutePath {
   if (typeof value !== "string") return "/";
   try {
     const url = new URL(value, "https://teriip.invalid");
-    if (url.origin !== "https://teriip.invalid" || !safeAppPaths.has(url.pathname as TeriipRoutePath)) {
+    if (
+      url.origin !== "https://teriip.invalid" ||
+      !safeAppPaths.has(url.pathname as TeriipRoutePath)
+    ) {
       return "/";
     }
     return url.pathname as TeriipRoutePath;

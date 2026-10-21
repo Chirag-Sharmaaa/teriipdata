@@ -12,7 +12,8 @@ async function getActiveActor(context: ActorContext) {
     .select("role, centre_id, disabled_at")
     .eq("user_id", context.userId)
     .maybeSingle();
-  if (error || !data || data.disabled_at) throw new Error("Your account is not authorized for this action.");
+  if (error || !data || data.disabled_at)
+    throw new Error("Your account is not authorized for this action.");
   if (data.role !== "super_admin" && data.role !== "centre_admin") {
     throw new Error("Your account is not authorized for this action.");
   }
@@ -36,17 +37,27 @@ export const listManageableAccounts = createServerFn({ method: "GET" })
       .select("id, email, username, display_name")
       .in("id", ids);
     if (profileError) throw new Error("Could not load account details.");
-    const profileById = new Map((profiles ?? []).map((profile: { id: string }) => [profile.id, profile]));
+    const profileById = new Map(
+      (profiles ?? []).map((profile: { id: string }) => [profile.id, profile]),
+    );
     return {
       actorRole: actor.role,
-      accounts: (roles ?? []).map((row: { user_id: string; role: TeriipRole; centre_id: string | null; disabled_at: string | null; created_at: string }) => ({
-        userId: row.user_id,
-        role: row.role,
-        centreId: row.centre_id,
-        disabled: Boolean(row.disabled_at),
-        createdAt: row.created_at,
-        ...(profileById.get(row.user_id) ?? { email: null, username: null, display_name: null }),
-      })),
+      accounts: (roles ?? []).map(
+        (row: {
+          user_id: string;
+          role: TeriipRole;
+          centre_id: string | null;
+          disabled_at: string | null;
+          created_at: string;
+        }) => ({
+          userId: row.user_id,
+          role: row.role,
+          centreId: row.centre_id,
+          disabled: Boolean(row.disabled_at),
+          createdAt: row.created_at,
+          ...(profileById.get(row.user_id) ?? { email: null, username: null, display_name: null }),
+        }),
+      ),
     };
   });
 
@@ -54,12 +65,14 @@ export const inviteTeriipAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => ({
     ok: false,
-    message: "Invitations are unavailable until secure account-provisioning access and the verified centre roster are configured.",
+    message:
+      "Invitations are unavailable until secure account-provisioning access and the verified centre roster are configured.",
   }));
 
 export const manageTeriipAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => ({
     ok: false,
-    message: "Account changes are unavailable until secure account-provisioning access is configured.",
+    message:
+      "Account changes are unavailable until secure account-provisioning access is configured.",
   }));
