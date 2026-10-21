@@ -1123,7 +1123,7 @@ export function AdminView() {
           <strong>Administrator preview</strong>
           <span>
             {" "}
-            All figures are synthetic. No user accounts or centre data are being administered.
+            Figures are samples until Google Drive is connected. Accounts are managed from Team accounts.
           </span>
         </div>
         <Badge variant="outline" className="demo-tag">
