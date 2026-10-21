@@ -20,7 +20,16 @@ describe("App routing", () => {
   it("matches every TERIIP workspace page", () => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
 
-    for (const path of ["/upload", "/import", "/activity", "/admin", "/auth", "/reset-password", "/settings", "/manage-users"]) {
+    for (const path of [
+      "/upload",
+      "/import",
+      "/activity",
+      "/admin",
+      "/auth",
+      "/reset-password",
+      "/settings",
+      "/manage-users",
+    ]) {
       expect(router.matchRoutes(path).at(-1)?.routeId).not.toBe(rootRouteId);
     }
   });
@@ -41,7 +50,7 @@ describe("TERIIP access boundaries", () => {
 
   it("only returns approved in-app pages from a sign-in redirect", () => {
     expect(safeTeriipReturnPath("/activity?filter=Delhi")).toBe("/activity");
-    expect(safeTeriipReturnPath("https://attacker.example/" )).toBe("/");
+    expect(safeTeriipReturnPath("https://attacker.example/")).toBe("/");
     expect(safeTeriipReturnPath("/unknown")).toBe("/");
   });
 
