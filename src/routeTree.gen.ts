@@ -15,6 +15,7 @@ import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as AuthenticatedManageUsersRouteImport } from './routes/_authenticated.manage-users'
@@ -49,6 +50,11 @@ const ImportRoute = ImportRouteImport.update({
   path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/import': typeof ImportRoute
+  '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/upload': typeof UploadRoute
   '/manage-users': typeof AuthenticatedManageUsersRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/import': typeof ImportRoute
+  '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/upload': typeof UploadRoute
   '/manage-users': typeof AuthenticatedManageUsersRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/import': typeof ImportRoute
+  '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/upload': typeof UploadRoute
   '/_authenticated/manage-users': typeof AuthenticatedManageUsersRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/import'
+    | '/onboarding'
     | '/reset-password'
     | '/upload'
     | '/manage-users'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/import'
+    | '/onboarding'
     | '/reset-password'
     | '/upload'
     | '/manage-users'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/import'
+    | '/onboarding'
     | '/reset-password'
     | '/upload'
     | '/_authenticated/manage-users'
@@ -150,6 +162,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   ImportRoute: typeof ImportRoute
+  OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UploadRoute: typeof UploadRoute
 }
@@ -196,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -249,6 +269,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   ImportRoute: ImportRoute,
+  OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UploadRoute: UploadRoute,
 }

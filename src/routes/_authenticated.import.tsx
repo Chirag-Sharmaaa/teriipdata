@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ImportView } from "@/components/teriip-views";
 
-export const Route = createFileRoute("/import")({
+export const Route = createFileRoute("/_authenticated/import")({
   head: () => ({
     meta: [
       { title: "Excel Import — TERIIP" },
