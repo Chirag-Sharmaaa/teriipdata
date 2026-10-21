@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ShieldCheck, Users } from "lucide-react";
@@ -40,10 +39,7 @@ export function UserManagementView() {
   const isSuperAdmin = Boolean(
     data && typeof data === "object" && "actorRole" in data && data.actorRole === "super_admin",
   );
-  const availableAccounts = useMemo(
-    () => accounts.filter((item) => item.userId !== account?.id),
-    [account?.id, accounts],
-  );
+  const availableAccounts = accounts.filter((item) => item.userId !== account?.id);
 
   return (
     <div className="account-settings-page user-management-page">
