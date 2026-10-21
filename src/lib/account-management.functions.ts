@@ -130,7 +130,7 @@ export const inviteTeriipAccount = createServerFn({ method: "POST" })
     const admin = await loadAdmin();
     const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(data.email, {
       redirectTo: `${origin}/onboarding`,
-      data: data.displayName ? { name: data.displayName } : undefined,
+      ...(data.displayName ? { data: { name: data.displayName } } : {}),
     });
     if (error || !invited.user) {
       throw new Error(

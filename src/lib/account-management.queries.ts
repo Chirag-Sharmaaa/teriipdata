@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-export function manageableAccountsQueryOptions(fetchAccounts: () => Promise<unknown>) {
+
+export function manageableAccountsQueryOptions<T>(fetchAccounts: () => Promise<T>) {
   return queryOptions({
     queryKey: ["teriip", "manageable-accounts"],
     queryFn: fetchAccounts,
