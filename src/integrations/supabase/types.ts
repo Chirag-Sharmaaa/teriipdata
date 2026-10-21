@@ -106,6 +106,7 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      teriip_onboarding_complete: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "centre_admin" | "centre_staff"

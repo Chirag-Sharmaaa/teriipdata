@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UploadView } from "@/components/teriip-views";
 
-export const Route = createFileRoute("/upload")({
+export const Route = createFileRoute("/_authenticated/upload")({
   head: () => ({
     meta: [
       { title: "PDF Review — TERIIP" },

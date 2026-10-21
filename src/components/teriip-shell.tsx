@@ -44,12 +44,12 @@ export function TeriipShell({
   const { account, authLoading, signOut } = useTeriipAuth();
   const activeCentreName = account?.centreId ?? activeCentre;
   const initials =
-    (account?.displayName || account?.email || "DS")
+    (account?.displayName || account?.username || "TERIIP")
       .split(/[\s@._-]+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
-      .join("") || "DS";
+      .join("") || "T";
 
   return (
     <div className="app-frame">
@@ -66,7 +66,7 @@ export function TeriipShell({
         <div className="workspace-label">WORKSPACE</div>
         <nav className="side-nav" aria-label="Main navigation">
           {navigation
-            .filter((item) => item.to !== "/admin" || !account || account.role === "super_admin")
+            .filter((item) => item.to !== "/admin" || account?.role === "super_admin")
             .map(({ label, to, icon: Icon }) => {
               const active = pathname === to || (to !== "/" && pathname.startsWith(to));
               return (
@@ -84,7 +84,7 @@ export function TeriipShell({
             <span className="connection-dot" /> <span>Drive workspace</span>
           </div>
           <strong>Not connected</strong>
-          <p>Demo mode · no files are synced</p>
+          <p>Awaiting Drive authorization · no files are read or written</p>
           <Button variant="outline" size="sm" className="drive-button" asChild>
             <Link to="/admin">
               View setup <ArrowUpRight size={13} />
@@ -96,12 +96,12 @@ export function TeriipShell({
             <Link to="/settings" className="profile-row" aria-label="Account settings">
               <span className="avatar-mark">{initials}</span>
               <span className="profile-copy">
-                <strong>{account.displayName || account.email || "TERIIP account"}</strong>
+                <strong>{account.displayName || account.username || "TERIIP account"}</strong>
                 <small>
                   {account.role === "super_admin"
                     ? "Super Admin"
                     : account.role === "centre_admin"
-                      ? "Centre Admin"
+                      ? `${activeCentreName} · Centre Admin`
                       : account.role === "centre_staff"
                         ? `${activeCentreName} · Centre Staff`
                         : "Access pending"}
@@ -119,28 +119,14 @@ export function TeriipShell({
               </Button>
             </div>
           </div>
-        ) : authLoading ? (
+        ) : (
           <div className="profile-row">
             <span className="avatar-mark">···</span>
             <span className="profile-copy">
-              <strong>Checking access</strong>
+              <strong>{authLoading ? "Checking access" : "Signed out"}</strong>
               <small>Secure account</small>
             </span>
           </div>
-        ) : (
-          <Link
-            to="/auth"
-            search={{ next: undefined, flow: undefined }}
-            className="profile-row"
-            aria-label="Sign in"
-          >
-            <span className="avatar-mark">DS</span>
-            <span className="profile-copy">
-              <strong>Sign in</strong>
-              <small>Authorized accounts</small>
-            </span>
-            <ChevronDown size={14} />
-          </Link>
         )}
       </aside>
 
@@ -153,23 +139,12 @@ export function TeriipShell({
           </div>
           <div className="topbar-right">
             <span className="environment-pill">
-              <span /> Demonstration data
+              <span /> Sample figures · Drive not connected
             </span>
             <Button variant="ghost" size="icon" aria-label="Notifications" title="Notifications">
               <Bell size={17} />
             </Button>
-            {account ? (
-              <span className="top-avatar">{initials}</span>
-            ) : (
-              <Link
-                to="/auth"
-                search={{ next: undefined, flow: undefined }}
-                className="top-avatar"
-                aria-label="Sign in"
-              >
-                DS
-              </Link>
-            )}
+            <span className="top-avatar">{initials}</span>
           </div>
         </header>
 
@@ -177,10 +152,11 @@ export function TeriipShell({
           <div className="demo-notice">
             <ShieldCheck size={15} />
             <span>
-              <strong>Safe demo workspace</strong>
+              <strong>Google Drive not connected yet</strong>
               <span>
                 {" "}
-                Synthetic values only. No real records, reports, or Google Drive connection.
+                Figures shown are samples. Real reports and spreadsheets are read and written only
+                after HQ connects the TERIIP Drive folder.
               </span>
             </span>
           </div>
@@ -195,7 +171,7 @@ export function TeriipShell({
           {children}
           <footer className="page-footer">
             <span>
-              <Activity size={13} /> Preview workspace
+              <Activity size={13} /> Secure workspace
             </span>
             <span>Research data monitoring · Not for clinical decisions</span>
           </footer>

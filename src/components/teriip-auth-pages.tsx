@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 import { supabase } from "@/integrations/supabase/client";
-import { safeTeriipReturnPath } from "@/lib/teriip-access";
+import { isTemporaryLoginEmail, safeTeriipReturnPath, teriipLoginEmail } from "@/lib/teriip-access";
 
-function AuthFrame({ children }: { children: ReactNode }) {
+export function AuthFrame({ children }: { children: ReactNode }) {
   return (
     <main className="teriip-auth-frame">
       <section className="teriip-auth-panel">
@@ -39,7 +39,7 @@ function AuthFrame({ children }: { children: ReactNode }) {
   );
 }
 
-function InlineMessage({
+export function InlineMessage({
   message,
   kind = "error",
 }: {
@@ -73,23 +73,27 @@ export function AuthView() {
   }, [destination, navigate]);
 
   useEffect(() => {
-    if (!authLoading && account?.role && !account.disabled && !flow) void finishLogin();
-  }, [account, authLoading, finishLogin, flow]);
+    if (authLoading || !account || flow) return;
+    if (account.onboarding) {
+      void navigate({ to: "/onboarding", replace: true });
+      return;
+    }
+    if (account.role && !account.disabled) void finishLogin();
+  }, [account, authLoading, finishLogin, flow, navigate]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: teriipLoginEmail(email),
       password,
     });
     setBusy(false);
     if (signInError) {
-      setError("Sign-in failed. Check your email and password, and confirm your email address.");
+      setError("Sign-in failed. Check your email or temporary username and password.");
       return;
     }
-    await finishLogin();
   }
 
   async function sendReset(event: FormEvent<HTMLFormElement>) {
@@ -97,6 +101,13 @@ export function AuthView() {
     setBusy(true);
     setError("");
     setSuccess("");
+    if (!email.includes("@")) {
+      setBusy(false);
+      setError(
+        "Temporary usernames have no email for reset links. Ask TERIIP Headquarters for help, then add your email at first login.",
+      );
+      return;
+    }
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
       {
@@ -279,12 +290,16 @@ export function AuthView() {
     <AuthFrame>
       <p className="eyebrow">SECURE WORKSPACE</p>
       <h1>Sign in to TERIIP</h1>
-      <p className="auth-description">Use the account invited by your TERIIP administrator.</p>
+      <p className="auth-description">
+        Use your email, or the temporary username given to you by TERIIP Headquarters.
+      </p>
       <form className="auth-form" onSubmit={signIn}>
-        <label htmlFor="login-email">Email address</label>
+        <label htmlFor="login-email">Email or temporary username</label>
         <Input
           id="login-email"
-          type="email"
+          type="text"
+          autoCapitalize="none"
+          spellCheck={false}
           autoComplete="username"
           required
           value={email}
@@ -501,7 +516,7 @@ export function SettingsView() {
         <p className="eyebrow">ACCOUNT SECURITY</p>
         <h1>Settings</h1>
         <p className="page-description">Manage your account details and sign-in security.</p>
-        {!account?.emailConfirmed && (
+        {!account?.emailConfirmed && !isTemporaryLoginEmail(account?.email) && (
           <section className="settings-section verify-section">
             <div>
               <MailCheck size={18} />
@@ -522,7 +537,14 @@ export function SettingsView() {
           <p>Your access level and centre are managed by your TERIIP administrator.</p>
           <form className="auth-form" onSubmit={saveProfile}>
             <label htmlFor="settings-email">Registered email</label>
-            <Input id="settings-email" type="email" value={account?.email ?? ""} readOnly />
+            <Input
+              id="settings-email"
+              type="email"
+              value={
+                isTemporaryLoginEmail(account?.email) ? "Not added yet" : (account?.email ?? "")
+              }
+              readOnly
+            />
             <label htmlFor="settings-name">Display name</label>
             <Input
               id="settings-name"

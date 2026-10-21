@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ActivityView } from "@/components/teriip-views";
 
-export const Route = createFileRoute("/activity")({
+export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({
     meta: [
       { title: "Recent Activity — TERIIP" },

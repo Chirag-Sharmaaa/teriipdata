@@ -510,3 +510,7 @@ button:disabled { cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.teriip-select { min-height: 32px; width: 100%; max-width: 220px; border: 1px solid var(--border); border-radius: 5px; background: var(--background); color: var(--foreground); font-size: 11px; padding: 0 8px; }
+.account-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.invite-form { max-width: 420px; }
