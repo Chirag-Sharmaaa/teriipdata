@@ -68,9 +68,13 @@ export function OnboardingView() {
       const result = await submitEmail({ data: { email } });
       const { error: linkError } = await supabase.auth.signInWithOtp({
         email: result.email,
-        options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/onboarding` },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/onboarding`,
+        },
       });
-      if (linkError) throw new Error("The confirmation email could not be sent. Try again shortly.");
+      if (linkError)
+        throw new Error("The confirmation email could not be sent. Try again shortly.");
       setSentTo(result.email);
       checkedLink.current = false;
     } catch (caught) {
@@ -190,7 +194,11 @@ export function OnboardingView() {
         />
         {error && <InlineMessage message={error} />}
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? "Sending…" : waitingFor ? "Send confirmation link again" : "Send confirmation link"}
+          {busy
+            ? "Sending…"
+            : waitingFor
+              ? "Send confirmation link again"
+              : "Send confirmation link"}
         </Button>
       </form>
       <button type="button" className="auth-back-link" onClick={() => void signOut()}>

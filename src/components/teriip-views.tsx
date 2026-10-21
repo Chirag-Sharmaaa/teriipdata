@@ -1123,7 +1123,8 @@ export function AdminView() {
           <strong>Administrator preview</strong>
           <span>
             {" "}
-            Figures are samples until Google Drive is connected. Accounts are managed from Team accounts.
+            Figures are samples until Google Drive is connected. Accounts are managed from Team
+            accounts.
           </span>
         </div>
         <Badge variant="outline" className="demo-tag">

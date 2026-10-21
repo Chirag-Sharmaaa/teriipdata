@@ -155,7 +155,8 @@ export function TeriipShell({
               <strong>Google Drive not connected yet</strong>
               <span>
                 {" "}
-                Figures shown are samples. Real reports and spreadsheets are read and written only after HQ connects the TERIIP Drive folder.
+                Figures shown are samples. Real reports and spreadsheets are read and written only
+                after HQ connects the TERIIP Drive folder.
               </span>
             </span>
           </div>

@@ -52,7 +52,12 @@ async function audit(
   actorId: string,
   subjectId: string | null,
   centreId: string | null,
-  eventType: "account.invited" | "account.updated" | "account.disabled" | "account.enabled" | "account.deleted",
+  eventType:
+    | "account.invited"
+    | "account.updated"
+    | "account.disabled"
+    | "account.enabled"
+    | "account.deleted",
   details: Record<string, string | null> = {},
 ) {
   const admin = await loadAdmin();
@@ -67,7 +72,8 @@ async function audit(
 
 function validateAssignment(input: { role?: unknown; centreId?: unknown }) {
   const role = input.role;
-  if (role !== "centre_admin" && role !== "centre_staff") throw new Error("Choose a valid access level.");
+  if (role !== "centre_admin" && role !== "centre_staff")
+    throw new Error("Choose a valid access level.");
   const centreId = typeof input.centreId === "string" ? input.centreId : null;
   if (!isKnownCentre(centreId)) throw new Error("Choose a valid TERIIP centre.");
   return { role: role as ManagedRole, centreId };
@@ -113,12 +119,18 @@ export const listManageableAccounts = createServerFn({ method: "GET" })
 
 export const inviteTeriipAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { email: string; displayName?: string; role: ManagedRole; centreId: string }) => {
-    const email = String(input?.email ?? "").trim().toLowerCase();
-    if (!isValidRealEmail(email)) throw new Error("Enter a valid email address.");
-    const displayName = String(input?.displayName ?? "").trim().slice(0, 120);
-    return { email, displayName, ...validateAssignment(input) };
-  })
+  .inputValidator(
+    (input: { email: string; displayName?: string; role: ManagedRole; centreId: string }) => {
+      const email = String(input?.email ?? "")
+        .trim()
+        .toLowerCase();
+      if (!isValidRealEmail(email)) throw new Error("Enter a valid email address.");
+      const displayName = String(input?.displayName ?? "")
+        .trim()
+        .slice(0, 120);
+      return { email, displayName, ...validateAssignment(input) };
+    },
+  )
   .handler(async ({ data, context }) => {
     const actor = await getActiveActor(context);
     if (!canManageTeriipRole(actor.role, data.role, actor.centre_id, data.centreId)) {

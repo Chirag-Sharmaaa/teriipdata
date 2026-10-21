@@ -14,11 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  isTemporaryLoginEmail,
-  safeTeriipReturnPath,
-  teriipLoginEmail,
-} from "@/lib/teriip-access";
+import { isTemporaryLoginEmail, safeTeriipReturnPath, teriipLoginEmail } from "@/lib/teriip-access";
 
 export function AuthFrame({ children }: { children: ReactNode }) {
   return (
@@ -544,7 +540,9 @@ export function SettingsView() {
             <Input
               id="settings-email"
               type="email"
-              value={isTemporaryLoginEmail(account?.email) ? "Not added yet" : (account?.email ?? "")}
+              value={
+                isTemporaryLoginEmail(account?.email) ? "Not added yet" : (account?.email ?? "")
+              }
               readOnly
             />
             <label htmlFor="settings-name">Display name</label>

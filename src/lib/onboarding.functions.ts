@@ -18,7 +18,9 @@ async function loadUser(userId: string) {
 export const submitOnboardingEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { email: string }) => {
-    const email = String(input?.email ?? "").trim().toLowerCase();
+    const email = String(input?.email ?? "")
+      .trim()
+      .toLowerCase();
     if (!isValidRealEmail(email)) throw new Error("Enter a valid email address.");
     return { email };
   })
@@ -36,7 +38,11 @@ export const submitOnboardingEmail = createServerFn({ method: "POST" })
     const { error } = await admin.auth.admin.updateUserById(user.id, {
       email: data.email,
       email_confirm: true,
-      app_metadata: { ...meta, teriip_onboarding: "verify_email", teriip_pending_email: data.email },
+      app_metadata: {
+        ...meta,
+        teriip_onboarding: "verify_email",
+        teriip_pending_email: data.email,
+      },
     });
     if (error) {
       throw new Error(
@@ -55,8 +61,9 @@ export const confirmOnboardingEmail = createServerFn({ method: "POST" })
     const { admin, user } = await loadUser(context.userId);
     const meta = { ...(user.app_metadata ?? {}) } as Record<string, unknown>;
     if (onboardingStage(meta) !== "verify_email") return { ok: false as const };
-    const amr = (context.claims as { amr?: Array<{ method?: string; timestamp?: number } | string> })
-      .amr;
+    const amr = (
+      context.claims as { amr?: Array<{ method?: string; timestamp?: number } | string> }
+    ).amr;
     const now = Date.now() / 1000;
     const fromEmailLink = (amr ?? []).some((entry) =>
       typeof entry === "string"
@@ -65,7 +72,8 @@ export const confirmOnboardingEmail = createServerFn({ method: "POST" })
           typeof entry.timestamp === "number" &&
           now - entry.timestamp < 60 * 60,
     );
-    if (!fromEmailLink || user.email !== meta["teriip_pending_email"]) return { ok: false as const };
+    if (!fromEmailLink || user.email !== meta["teriip_pending_email"])
+      return { ok: false as const };
     const { error } = await admin.auth.admin.updateUserById(user.id, {
       app_metadata: { ...meta, teriip_onboarding: "password", teriip_pending_email: null },
     });

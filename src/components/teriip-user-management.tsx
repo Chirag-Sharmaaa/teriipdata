@@ -76,7 +76,8 @@ export function UserManagementView() {
   const [centre, setCentre] = useState<string>(TERIIP_CENTRES[0]);
   const [drafts, setDrafts] = useState<Record<string, { role: ManagedRole; centreId: string }>>({});
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["teriip", "manageable-accounts"] });
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ["teriip", "manageable-accounts"] });
   const onDone = (result: { message: string }) => {
     toast.success(result.message);
     void refresh();
@@ -285,9 +286,15 @@ export function UserManagementView() {
                       )}
                     </td>
                     <td>
-                      <span className={`mapping-indicator ${item.disabled ? "mapping-review" : ""}`}>
+                      <span
+                        className={`mapping-indicator ${item.disabled ? "mapping-review" : ""}`}
+                      >
                         <span />
-                        {item.disabled ? "Disabled" : setupPending ? "First login pending" : "Active"}
+                        {item.disabled
+                          ? "Disabled"
+                          : setupPending
+                            ? "First login pending"
+                            : "Active"}
                       </span>
                     </td>
                     <td>
@@ -327,8 +334,8 @@ export function UserManagementView() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete {label}?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This permanently removes the account and its access. It cannot
-                                  be undone.
+                                  This permanently removes the account and its access. It cannot be
+                                  undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
