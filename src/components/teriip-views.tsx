@@ -32,6 +32,9 @@ import { SectionTitle, TeriipShell } from "@/components/teriip-shell";
 import { COMMON_PARAMETERS, CENTRE_EXTENSIONS, TERIIP_CENTRES } from "@/lib/teriip-schema";
 import { useWorkspaceSettings } from "@/lib/teriip-workspace-settings";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getDriveStats } from "@/lib/drive-stats.functions";
 
 function Metric({
   label,
@@ -180,6 +183,30 @@ export function DashboardView() {
   const isSuperAdmin = account?.role === "super_admin";
   const visibleCentre = account?.centreId ?? centre;
   const displayName = account?.displayName || account?.username || "there";
+  const fetchStats = useServerFn(getDriveStats);
+  const statsQuery = useQuery({
+    queryKey: ["drive-stats", account?.id ?? null],
+    queryFn: () => fetchStats(),
+    enabled: Boolean(account?.role),
+    staleTime: 60_000,
+  });
+  const stats = statsQuery.data;
+  const centres = stats?.centres ?? [];
+  const connected = Boolean(stats?.connected);
+  const totalRecords = centres.reduce((sum, c) => sum + (c.records ?? 0), 0);
+  const withCompleteness = centres.filter((c) => c.completeness !== null);
+  const avgCompleteness = withCompleteness.length
+    ? Math.round(withCompleteness.reduce((s, c) => s + (c.completeness ?? 0), 0) / withCompleteness.length)
+    : null;
+  const current = centres.find((c) => c.centre === visibleCentre);
+  const loadingText = statsQuery.isLoading ? "Reading Drive…" : undefined;
+  const statusText = statsQuery.isError
+    ? "Could not reach Drive"
+    : connected
+      ? "Connected"
+      : statsQuery.isLoading
+        ? "Checking…"
+        : "Not connected";
 
   return (
     <TeriipShell
@@ -204,29 +231,55 @@ export function DashboardView() {
             />
             <Metric
               label="PARTICIPANT RECORDS"
-              value="0"
-              detail="No Drive data available"
+              value={connected ? totalRecords.toLocaleString() : "—"}
+              detail={loadingText ?? `Across ${centres.filter((c) => c.records !== null).length} centre datasets`}
               icon={Database}
               color="teal"
             />
             <Metric
               label="DATA COMPLETENESS"
-              value="—"
-              detail="No records available"
+              value={avgCompleteness === null ? "—" : `${avgCompleteness}%`}
+              detail="Average filled cells per dataset"
               icon={Gauge}
               color="blue"
             />
             <Metric
               label="DRIVE STATUS"
-              value="Not connected"
-              detail="Source not configured"
+              value={statusText}
+              detail={connected ? "Sample Reports TERIIP PHASE - I" : "Source not reachable"}
               icon={FolderSync}
               color="orange"
             />
           </div>
-          <PageSection icon={Activity} title="Combined trend" detail="Monthly record additions">
-            <div className="empty-state">
-              No record history is available until Drive is connected.
+          <PageSection icon={Database} title="Records by centre" detail="Live counts from each centre's Drive dataset">
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>CENTRE</th>
+                    <th>DATASET</th>
+                    <th>RECORDS</th>
+                    <th>COMPLETENESS</th>
+                    <th>LAST UPDATED</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {centres.map((c) => (
+                    <tr key={c.centre}>
+                      <td><strong>{c.centre}</strong></td>
+                      <td className="type-copy">{c.fileName}</td>
+                      <td>{c.error ? <StatusBadge status="Failed" /> : (c.records ?? 0).toLocaleString()}</td>
+                      <td>{c.completeness === null ? "—" : `${c.completeness}%`}</td>
+                      <td className="date-cell">
+                        {c.modifiedTime ? new Date(c.modifiedTime).toLocaleDateString() : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {centres.length === 0 && (
+                <div className="empty-state">{loadingText ?? "No centre datasets could be read."}</div>
+              )}
             </div>
           </PageSection>
         </section>
@@ -246,7 +299,7 @@ export function DashboardView() {
           </div>
         </div>
         <div className="centre-meta">
-          <span className="connection-dot" /> No data source connected
+          <span className="connection-dot" /> {connected ? "Google Drive connected" : "No data source connected"}
           {(isSuperAdmin || !account) && (
             <>
               <span className="meta-divider" />
@@ -271,14 +324,14 @@ export function DashboardView() {
       <div className="metric-grid">
         <Metric
           label="PARTICIPANT RECORDS"
-          value="0"
-          detail="No Drive data available"
+          value={current?.records != null ? current.records.toLocaleString() : "—"}
+          detail={loadingText ?? (current?.error ? "Dataset could not be read" : current ? current.fileName : "No dataset available")}
           icon={Users}
         />
         <Metric
           label="DATA COMPLETENESS"
-          value="—"
-          detail="No records available"
+          value={current?.completeness != null ? `${current.completeness}%` : "—"}
+          detail="Filled cells in this centre's dataset"
           icon={Gauge}
           color="teal"
         />
@@ -310,7 +363,7 @@ export function DashboardView() {
           }
         >
           <div className="empty-state">
-            No record history is available until Drive is connected.
+            Monthly history will appear once uploads are recorded through TERIIP.
           </div>
         </PageSection>
         <PageSection icon={FolderSync} title="Workspace status" detail="Drive connection status">
@@ -319,18 +372,18 @@ export function DashboardView() {
               <FolderSync size={19} />
             </div>
             <div>
-              <strong>Google Drive not connected</strong>
-              <span>No source is connected</span>
+              <strong>{connected ? "Google Drive connected" : "Google Drive not connected"}</strong>
+              <span>{connected ? "Read-only record counts" : "No source is connected"}</span>
             </div>
           </div>
           <div className="sync-list">
             <div>
               <span>Last dataset refresh</span>
-              <strong>Not available</strong>
+              <strong>{current?.modifiedTime ? new Date(current.modifiedTime).toLocaleString() : "Not available"}</strong>
             </div>
             <div>
               <span>Destination workbook</span>
-              <strong>Not configured</strong>
+              <strong>{current?.fileName ?? "Not configured"}</strong>
             </div>
             <div>
               <span>Recent submissions</span>
@@ -338,7 +391,7 @@ export function DashboardView() {
             </div>
           </div>
           <div className="subtle-note">
-            <Info size={14} /> No files have been read or changed.
+            <Info size={14} /> Datasets are only read for counts; nothing is changed.
           </div>
         </PageSection>
       </div>
@@ -361,8 +414,8 @@ export function DashboardView() {
       <div className="bottom-note">
         <ShieldCheck size={15} />
         <span>
-          No participant data is available because Drive is not connected. Do not enter real
-          participant information until approved processing is configured.
+          Only record counts are read from Drive; no participant details are shown or stored. Do
+          not enter real participant information until approved processing is configured.
         </span>
       </div>
     </TeriipShell>

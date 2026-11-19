@@ -17,3 +17,4 @@
 - Use Lovable Cloud Auth for account identity and keep display/profile attributes separate from role grants; authorize account administration and centre access through server-checked roles plus database RLS so browser-controlled state cannot grant privileges.
 - Accounts without a real email sign in with a temporary username mapped to the reserved undeliverable domain in `src/lib/teriip-access.ts`; first-login steps live in server-only `app_metadata.teriip_onboarding` and database role checks refuse access until it is cleared, so a temporary login can never reach centre data.
 - Workspace pages live under the `_authenticated` layout; `/` stays public but renders only a sign-in prompt until a fully set-up account is present.
+- Dashboard record counts come from a server function that reads each centre's fixed Drive dataset (map in src/lib/drive-datasets.ts) and returns only counts/completeness; centre accounts get only their own centre.
