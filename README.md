@@ -1,6 +1,6 @@
-# TERIIP Research Workspace — demonstration
+# TERIIP Research Workspace
 
-This project contains a **synthetic-data-only interactive preview** of the proposed multi-centre TERIIP research workspace, plus a Lovable Cloud sign-in and protected role foundation. It is not the production data-processing system described in the uploaded brief. No users have been provisioned and no real participant processing or Drive writes are enabled. Do not enter real participant information or upload real reports.
+This project contains the TERIIP workspace interface and Lovable Cloud sign-in and role foundation. The Google Drive source is not connected, so the workspace displays no participant records, activity, report values, or workbook rows. The screens remain in place, but report extraction, workbook import/writes, and Drive operations are not configured. Do not enter real participant information or upload real reports.
 
 ## Run locally
 
@@ -13,19 +13,19 @@ bun run dev
 
 Open the local address printed by Vite. Run available checks with `bun run test` and `bun run lint`.
 
-## Preview screens
+## Workspace screens
 
-- `/` — synthetic centre dashboard and recent activity.
-- `/upload` — editable fabricated PDF-review example; no file chooser or PDF processing.
-- `/import` — fabricated spreadsheet column mapping; no workbook upload or import.
-- `/activity` — synthetic activity examples and centre filter.
-- `/admin` — synthetic centre summaries; the former optional-field settings panel has been removed.
+- `/` — centre dashboard with zero records and unavailable completeness while no data source is connected.
+- `/upload` — empty PDF-review fields; no file chooser or PDF processing is configured.
+- `/import` — empty column-mapping and workbook preview states; no workbook source is connected.
+- `/activity` — empty workflow history with centre filter.
+- `/admin` — configured centre list with zero records and unavailable completeness.
 - `/auth` — invite-only sign-in and password recovery.
 - `/reset-password` — password reset for valid recovery links.
 - `/settings` — signed-in profile and password settings.
 - `/manage-users` — protected, scope-limited account listing; changes are paused until secure provisioning is configured.
 
-All preview state is temporary React in-memory state. Refreshing resets changes. Drive status, data, and successful confirmations are examples only.
+Centre selection and optional-field settings are temporary React in-memory state. No fabricated participant or workflow data is used. Real-data workflows remain disabled until Drive configuration and institutional privacy/security approvals are verified.
 
 ## Read next
 
@@ -35,4 +35,4 @@ All preview state is temporary React in-memory state. Refreshing resets changes.
 - [Parameter schema](PARAMETER_SCHEMA.md)
 - [Deployment status](DEPLOYMENT.md)
 - [Testing](TESTING.md)
-- [Demo scope and limitations](DEMO_SCOPE.md)
+- [Current scope and limitations](DEMO_SCOPE.md)

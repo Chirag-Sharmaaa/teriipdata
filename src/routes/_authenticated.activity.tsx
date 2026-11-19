@@ -7,12 +7,12 @@ export const Route = createFileRoute("/_authenticated/activity")({
       { title: "Recent Activity — TERIIP" },
       {
         name: "description",
-        content: "See synthetic examples of TERIIP report review and spreadsheet import statuses.",
+        content: "Review report and spreadsheet workflow activity recorded in TERIIP.",
       },
       { property: "og:title", content: "Recent Activity — TERIIP" },
       {
         property: "og:description",
-        content: "Synthetic workflow history in the TERIIP demonstration workspace.",
+        content: "TERIIP report and spreadsheet workflow history.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

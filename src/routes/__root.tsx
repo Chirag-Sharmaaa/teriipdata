@@ -13,7 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { DemoSettingsProvider } from "@/lib/teriip-demo-settings";
+import { WorkspaceSettingsProvider } from "@/lib/teriip-workspace-settings";
 import { TeriipAuthProvider } from "@/components/teriip-auth-provider";
 
 function NotFoundComponent() {
@@ -84,13 +84,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "TERIIP Research Workspace" },
       {
         name: "description",
-        content: "Synthetic-only workspace preview for TERIIP research data management.",
+        content:
+          "TERIIP research workspace. Data will appear when an approved source is connected.",
       },
       { name: "author", content: "TERIIP" },
       { property: "og:title", content: "TERIIP Research Workspace" },
       {
         property: "og:description",
-        content: "A synthetic-only preview of the TERIIP research workspace.",
+        content:
+          "TERIIP research workspace with no participant data displayed until an approved source is connected.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -128,13 +130,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <DemoSettingsProvider>
+      <WorkspaceSettingsProvider>
         <TeriipAuthProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Toaster richColors position="top-right" />
         </TeriipAuthProvider>
-      </DemoSettingsProvider>
+      </WorkspaceSettingsProvider>
     </QueryClientProvider>
   );
 }

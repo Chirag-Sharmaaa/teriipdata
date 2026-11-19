@@ -64,7 +64,7 @@ describe("TERIIP access boundaries", () => {
     expect(safeTeriipReturnPath("/unknown")).toBe("/");
   });
 
-  it("locks centre users to their assigned centre while leaving the synthetic preview selectable", () => {
+  it("locks centre users to their assigned centre while allowing workspace centre selection", () => {
     expect(centreForWorkspace("centre_staff", "Delhi", "AIIMS Bhopal")).toBe("Delhi");
     expect(centreForWorkspace("centre_admin", "Guwahati", "Delhi")).toBe("Guwahati");
     expect(centreForWorkspace(null, null, "Delhi")).toBe("Delhi");

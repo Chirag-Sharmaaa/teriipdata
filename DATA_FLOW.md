@@ -1,8 +1,8 @@
 # Data flow
 
-## Implemented preview flow
+## Current application flow
 
-All current example values are static synthetic data imported by the browser application. A user may edit visible sample values, select mappings, filter a centre, and confirm an example. This changes React memory only; there is no file selection, participant-data submission, workbook, or Drive operation. Refreshing the preview clears those changes. Authentication uses Lovable Cloud Auth; role membership and profile attributes are separate, and protected database policies scope account reads. Account invitations and changes are deliberately disabled until secure provisioning and the verified roster are available.
+No fabricated participant values or workflow records are displayed. Because Drive is not connected, the dashboard reports zero records, completeness is unavailable, and report-review, workbook-mapping, activity, and data-dependent admin panels show empty states. These screens do not read files, submit participant data, or simulate successful writes. Authentication uses Lovable Cloud Auth; role membership and profile attributes are separate, and protected database policies scope account reads.
 
 ## Intended future flow (not implemented)
 

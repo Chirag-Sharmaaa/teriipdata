@@ -1,16 +1,16 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { TERIIP_CENTRES } from "@/lib/teriip-schema";
 
-type DemoSettingsValue = {
+type WorkspaceSettingsValue = {
   activeCentre: string;
   setActiveCentre: (centre: string) => void;
   enabledExtensions: Record<string, boolean>;
   setCentreExtensions: (centre: string, enabled: boolean) => void;
 };
 
-const DemoSettingsContext = createContext<DemoSettingsValue | null>(null);
+const WorkspaceSettingsContext = createContext<WorkspaceSettingsValue | null>(null);
 
-export function DemoSettingsProvider({ children }: { children: ReactNode }) {
+export function WorkspaceSettingsProvider({ children }: { children: ReactNode }) {
   const [activeCentre, setActiveCentre] = useState<string>(TERIIP_CENTRES[0] ?? "AIIMS Bhopal");
   const [enabledExtensions, setEnabledExtensions] = useState<Record<string, boolean>>({});
   const value = useMemo(
@@ -24,11 +24,14 @@ export function DemoSettingsProvider({ children }: { children: ReactNode }) {
     [activeCentre, enabledExtensions],
   );
 
-  return <DemoSettingsContext.Provider value={value}>{children}</DemoSettingsContext.Provider>;
+  return (
+    <WorkspaceSettingsContext.Provider value={value}>{children}</WorkspaceSettingsContext.Provider>
+  );
 }
 
-export function useDemoSettings() {
-  const settings = useContext(DemoSettingsContext);
-  if (!settings) throw new Error("Demo settings must be used inside DemoSettingsProvider.");
+export function useWorkspaceSettings() {
+  const settings = useContext(WorkspaceSettingsContext);
+  if (!settings)
+    throw new Error("Workspace settings must be used inside WorkspaceSettingsProvider.");
   return settings;
 }

@@ -2,7 +2,7 @@
 
 ## Current status
 
-The workspace remains a synthetic-data demonstration. Two Super Admin and sixteen Centre Admin accounts exist with one-time temporary logins; each must add and confirm a real email and choose a new password at first login before the workspace opens. The public app does not accept real reports or write to Google Drive or Excel. Do not upload real participant information or use this preview as a production system.
+The workspace currently displays no fabricated participant data. The Google Drive source is not connected, and report processing, workbook import/writes, and real-data workflows are not enabled. Do not upload real participant information or use this application as a production system.
 
 ## Actions needed before real use
 

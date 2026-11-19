@@ -17,13 +17,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { title: "Admin Overview — TERIIP" },
       {
         name: "description",
-        content:
-          "View synthetic centre summaries and mock service status for the TERIIP demonstration.",
+        content: "View TERIIP centre configuration and data-source availability.",
       },
       { property: "og:title", content: "Admin Overview — TERIIP" },
       {
         property: "og:description",
-        content: "A synthetic-only overview of participating TERIIP centres.",
+        content: "TERIIP centre configuration and data-source status.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

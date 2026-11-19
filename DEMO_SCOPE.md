@@ -1,16 +1,16 @@
-# TERIIP demonstration scope
+# TERIIP current scope and limitations
 
-This project currently provides an interactive, synthetic-data-only preview of the proposed TERIIP workspace. Dashboard totals, charts, record identifiers, activity, report fields, and spreadsheet examples are fabricated.
+The TERIIP workspace interface is in place, but its Google Drive source is not connected. No fabricated participant data or workflow records are displayed; data-dependent metrics and screens remain empty until their approved source and processing are configured.
 
 ## Available in the preview
 
-- Centre dashboard and an all-centre administrator overview for the 16 named centres.
-- Editable review-table example for the complete common parameter list.
-- Spreadsheet column-mapping example with synthetic rows.
-- Recent activity filters and status examples.
+- Centre dashboard and an administrator overview for the 16 configured centres.
+- PDF review table for the complete common parameter list; values remain unavailable without a report source.
+- Spreadsheet column mapping and import preview; rows remain unavailable without a workbook source.
+- Recent activity centre filter; history is empty until a workflow source is connected.
 - Invite-only email/password sign-in and password-recovery screens, backed by Lovable Cloud Auth.
 - Separate profile and role-membership records, database access policies, and protected routes/server functions.
-- Mock Drive connection status, with no reads, uploads, or writes.
+- Drive connection status, with no reads, uploads, or writes.
 
 ## Not available yet
 
@@ -20,4 +20,4 @@ Production work is not complete in this preview. The current application templat
 
 ## Schema note
 
-The brief refers to 66–67 common parameters but its explicit ordered standard-column list contains 72 unique entries. The demo preserves the explicit names and order rather than silently dropping listed fields. The two listed centre extensions (`MRD No` and `ABO & Rh Blood grouping`) are kept separate from that common schema.
+The brief refers to 66–67 common parameters but its explicit ordered standard-column list contains 72 unique entries. The workspace preserves the explicit names and order rather than silently dropping listed fields. The two listed centre extensions (`MRD No` and `ABO & Rh Blood grouping`) are kept separate from that common schema.

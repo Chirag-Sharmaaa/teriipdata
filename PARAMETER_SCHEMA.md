@@ -4,11 +4,11 @@ The UI schema is defined in `src/lib/teriip-schema.ts`. It groups canonical para
 
 ## Count discrepancy
 
-The brief says “66–67 common parameters,” while its explicit ordered standard-column list contains **72 unique names**. The demo preserves all names in that explicit list, rather than dropping six fields. This discrepancy should be confirmed by the project data owner before production schema migration or import validation.
+The brief says “66–67 common parameters,” while its explicit ordered standard-column list contains **72 unique names**. The workspace preserves all names in that explicit list, rather than dropping six fields. This discrepancy should be confirmed by the project data owner before production schema migration or import validation.
 
 ## Centre-specific fields
 
-`MRD No` and `ABO & Rh Blood grouping` are kept out of the common list. The demo allows an administrator-preview user to explicitly enable both fields for a selected centre; it does not assume which centre uses them. This setting is in-memory and resets on refresh.
+`MRD No` and `ABO & Rh Blood grouping` are kept out of the common list. Centre extension settings are temporary, are not persisted, and do not assume which centre uses them.
 
 ## Validation
 

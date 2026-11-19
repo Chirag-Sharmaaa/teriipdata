@@ -1,6 +1,7 @@
 # TERIIP workspace roadmap
 
-- [x] Build a synthetic-only dashboard, PDF-review example, spreadsheet-mapping example, activity view, and administrator preview.
+- [x] Build the dashboard, PDF-review, spreadsheet-mapping, activity, and administrator views.
+- [x] Remove fabricated participant and workflow values; show empty or unavailable states while approved data sources are not connected.
 - [x] Centralize the explicit 72-name common schema and keep two optional extensions separate.
 - [x] Add temporary centre-specific extension toggles and document the prototype boundary.
 - [x] Add project, architecture, privacy, data-flow, schema, deployment, and testing documentation.

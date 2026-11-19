@@ -1,10 +1,10 @@
 # Architecture
 
-## Current demonstration
+## Current workspace
 
-The current runnable application is a TanStack Start v1, React 19, TypeScript, and Tailwind CSS v4 frontend with Lovable Cloud Auth and database policies for account profiles, role memberships, and scoped account-audit reads. File-based routes live under `src/routes/`; the shared TERIIP workspace shell and screens are under `src/components/`. Static synthetic metrics and activity examples are in `src/lib/teriip-demo-data.ts`. The ordered schema and centre extensions are in `src/lib/teriip-schema.ts`. Dashboard selection and remaining preview state live only in React memory.
+The current runnable application is a TanStack Start v1, React 19, TypeScript, and Tailwind CSS v4 frontend with Lovable Cloud Auth and database policies for account profiles, role memberships, and scoped account-audit reads. File-based routes live under `src/routes/`; the shared TERIIP workspace shell and screens are under `src/components/`. There are no fabricated participant records, activity rows, report values, or workbook rows. While Drive is disconnected, data metrics show zero or unavailable and data-dependent views show empty states. The ordered schema and centre extensions are in `src/lib/teriip-schema.ts`. Centre selection and optional-field settings live only in React memory.
 
-There is no production data-processing API, OCR engine, or Drive client. No real TERIIP accounts have been provisioned, account invitation or role-change operations are disabled, and no account-audit writes are enabled. Confirm actions on the PDF and Excel screens only change the displayed synthetic demo state.
+There is no production data-processing API, OCR engine, or Drive client. No real participant processing or Drive writes are enabled. The PDF-review and Excel-import screens do not accept data or report simulated success.
 
 ## Production work still required
 

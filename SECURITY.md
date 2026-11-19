@@ -1,8 +1,8 @@
 # Security and privacy boundary
 
-## Current preview and account foundation
+## Current workspace and account foundation
 
-The preview uses fabricated example records only. Email/password sign-in, password recovery, profile settings, and a separate role-membership foundation have been added. Public self-registration remains disabled; no user accounts, centre assignments, or Super Admin bootstrap have been supplied. Protected team account listing depends on an authenticated, assigned administrator. Account invitation, role changes, disabling/deleting users, report uploads, OCR, Excel writes, and Google Drive access are not enabled. Do not submit real reports, names, identifiers, or health information.
+The workspace displays no fabricated participant records or workflow examples. Email/password sign-in, password recovery, profile settings, and a separate role-membership foundation are implemented. The Drive source is not connected; report uploads, OCR, workbook writes, and Drive access are not enabled. The workspace is not an approved location for participant data. Do not submit real reports, names, identifiers, or health information.
 
 ## Required before real-data use
 

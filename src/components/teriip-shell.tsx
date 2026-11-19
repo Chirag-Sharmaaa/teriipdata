@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { useDemoSettings } from "@/lib/teriip-demo-settings";
+import { useWorkspaceSettings } from "@/lib/teriip-workspace-settings";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 
 const navigation = [
@@ -40,7 +40,7 @@ export function TeriipShell({
   actions?: React.ReactNode;
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const { activeCentre } = useDemoSettings();
+  const { activeCentre } = useWorkspaceSettings();
   const { account, authLoading, signOut } = useTeriipAuth();
   const activeCentreName = account?.centreId ?? activeCentre;
   const initials =
@@ -139,7 +139,7 @@ export function TeriipShell({
           </div>
           <div className="topbar-right">
             <span className="environment-pill">
-              <span /> Sample figures · Drive not connected
+              <span /> No workspace data · Drive not connected
             </span>
             <Button variant="ghost" size="icon" aria-label="Notifications" title="Notifications">
               <Bell size={17} />
@@ -149,14 +149,14 @@ export function TeriipShell({
         </header>
 
         <main className="page-content">
-          <div className="demo-notice">
+          <div className="connection-notice">
             <ShieldCheck size={15} />
             <span>
               <strong>Google Drive not connected yet</strong>
               <span>
                 {" "}
-                Figures shown are samples. Real reports and spreadsheets are read and written only
-                after HQ connects the TERIIP Drive folder.
+                No reports or spreadsheets are available. Workspace data will appear after the
+                approved TERIIP Drive source is connected.
               </span>
             </span>
           </div>
