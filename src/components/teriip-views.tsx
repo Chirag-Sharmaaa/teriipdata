@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -9,8 +9,6 @@ import {
   CircleHelp,
   ClipboardCheck,
   Database,
-  FileCheck2,
-  FileSpreadsheet,
   FileText,
   Filter,
   FlaskConical,
@@ -19,22 +17,17 @@ import {
   Info,
   LockKeyhole,
   MoreHorizontal,
-  RefreshCw,
   Search,
   ShieldCheck,
-  SlidersHorizontal,
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SectionTitle, TeriipShell } from "@/components/teriip-shell";
+import { SectionTitle, TeriipShell, useDriveConnection } from "@/components/teriip-shell";
 import { COMMON_PARAMETERS, CENTRE_EXTENSIONS, TERIIP_CENTRES } from "@/lib/teriip-schema";
 import { useWorkspaceSettings } from "@/lib/teriip-workspace-settings";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getDriveStats } from "@/lib/drive-stats.functions";
 
 function Metric({
   label,
@@ -183,13 +176,7 @@ export function DashboardView() {
   const isSuperAdmin = account?.role === "super_admin";
   const visibleCentre = account?.centreId ?? centre;
   const displayName = account?.displayName || account?.username || "there";
-  const fetchStats = useServerFn(getDriveStats);
-  const statsQuery = useQuery({
-    queryKey: ["drive-stats", account?.id ?? null],
-    queryFn: () => fetchStats(),
-    enabled: Boolean(account?.role),
-    staleTime: 60_000,
-  });
+  const statsQuery = useDriveConnection();
   const stats = statsQuery.data;
   const centres = stats?.centres ?? [];
   const connected = Boolean(stats?.connected);
@@ -425,6 +412,9 @@ export function DashboardView() {
 export function UploadView() {
   const { activeCentre, enabledExtensions } = useWorkspaceSettings();
   const [query, setQuery] = useState("");
+  const [pdfSelected, setPdfSelected] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const extensionsForCentre = enabledExtensions[activeCentre] ?? false;
   const parameters = extensionsForCentre
     ? [...COMMON_PARAMETERS, ...CENTRE_EXTENSIONS]
@@ -438,7 +428,16 @@ export function UploadView() {
       title="PDF report review"
       description="Review report fields when an approved report source is available."
       actions={
-        <Button variant="outline" className="quiet-action" onClick={() => setQuery("")}>
+        <Button
+          variant="outline"
+          className="quiet-action"
+          onClick={() => {
+            setQuery("");
+            setPdfSelected(false);
+            setUploadMessage(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+          }}
+        >
           Reset review
         </Button>
       }
@@ -454,6 +453,43 @@ export function UploadView() {
           </span>
         </div>
       </div>
+      <div className="pdf-upload-controls">
+        <div className="pdf-file-control">
+          <label htmlFor="report-pdf">Participant report (PDF)</label>
+          <Input
+            ref={fileInputRef}
+            id="report-pdf"
+            type="file"
+            accept="application/pdf,.pdf"
+            aria-label="Choose a participant PDF report"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              const isPdf = Boolean(
+                file &&
+                  (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")),
+              );
+              setPdfSelected(isPdf);
+              setUploadMessage(file && !isPdf ? "Please select a PDF file." : null);
+            }}
+          />
+        </div>
+        <Button
+          className="primary-action"
+          disabled={!pdfSelected}
+          onClick={() =>
+            setUploadMessage(
+              "The PDF was not sent. Report extraction and Drive updates are not configured yet.",
+            )
+          }
+        >
+          <FileText size={16} /> Upload PDF
+        </Button>
+      </div>
+      {uploadMessage && (
+        <p className="pdf-upload-message" role="status" aria-live="polite">
+          {uploadMessage}
+        </p>
+      )}
       <div className="review-summary-strip">
         <div className="file-symbol">
           <FileText size={20} />
@@ -548,187 +584,6 @@ export function UploadView() {
   );
 }
 
-const importedColumns: {
-  source: string;
-  canonical: string;
-  confidence: "matched" | "review" | "ignored" | "ambiguous";
-}[] = [];
-
-export function ImportView() {
-  const { activeCentre, enabledExtensions } = useWorkspaceSettings();
-  const [mappings, setMappings] = useState(importedColumns.map((column) => column.canonical));
-  const [search, setSearch] = useState("");
-  const candidates = COMMON_PARAMETERS.filter((parameter) =>
-    parameter.name.toLowerCase().includes(search.toLowerCase()),
-  ).map((parameter) => parameter.name);
-  if (enabledExtensions[activeCentre])
-    candidates.push(...CENTRE_EXTENSIONS.map((parameter) => parameter.name));
-  const mappedCount = mappings.filter(
-    (mapping) => mapping !== "Choose parameter…" && mapping !== "Ignore this column",
-  ).length;
-
-  return (
-    <TeriipShell
-      eyebrow="DATA IMPORT"
-      title="Excel column mapping"
-      description="Map workbook columns after a workbook source is available."
-      actions={
-        <Button
-          variant="outline"
-          className="quiet-action"
-          onClick={() => {
-            setMappings([]);
-            setSearch("");
-          }}
-        >
-          Reset mapping
-        </Button>
-      }
-    >
-      <div className="workflow-safety">
-        <LockKeyhole size={16} />
-        <div>
-          <strong>No workbook is available to map.</strong>
-          <span>
-            {" "}
-            Drive is not connected and workbook import is not configured. No file has been read.
-          </span>
-        </div>
-      </div>
-      <div className="import-overview">
-        <div className="import-file-badge">
-          <FileSpreadsheet size={19} />
-        </div>
-        <div className="summary-file">
-          <strong>No workbook selected</strong>
-          <span>Workbook details will appear when an approved source is connected.</span>
-        </div>
-        <div className="import-progress-stat">
-          <strong>{mappedCount}</strong>
-          <small>COLUMNS MAPPED</small>
-        </div>
-        <div className="import-flag-stat">
-          <strong>0</strong>
-          <small>NEED ATTENTION</small>
-        </div>
-      </div>
-      <div className="mapping-callout">
-        <AlertCircle size={16} />
-        <span>
-          <strong>Column mapping is unavailable.</strong> Connect an approved workbook source to
-          load columns for review.
-        </span>
-      </div>
-      <div className="extension-note">
-        Only source columns from a connected workbook can be mapped. Centre-specific parameters
-        remain separate from the common schema.
-      </div>
-      <PageSection
-        icon={SlidersHorizontal}
-        title="Column mapping"
-        detail="Choose the matching TERIIP field for each source column."
-        aside={
-          <div className="search-field mapping-search">
-            <Search size={14} />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Find a parameter"
-              aria-label="Find a parameter"
-            />
-          </div>
-        }
-      >
-        <div className="mapping-table-wrap">
-          <table className="mapping-table">
-            <thead>
-              <tr>
-                <th>SOURCE COLUMN</th>
-                <th aria-label="Mapping direction" />
-                <th>TERIIP PARAMETER</th>
-                <th>REVIEW</th>
-              </tr>
-            </thead>
-            <tbody>
-              {importedColumns.map((column, index) => {
-                const mapping = mappings[index] ?? "Choose parameter…";
-                return (
-                  <tr key={column.source}>
-                    <td>
-                      <div className="source-heading">
-                        <span className="sheet-grid">
-                          <FileSpreadsheet size={14} />
-                        </span>
-                        <strong>{column.source}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <ArrowRight size={15} className="mapping-arrow" />
-                    </td>
-                    <td>
-                      <select
-                        aria-label={`Match ${column.source}`}
-                        value={mapping}
-                        onChange={(event) =>
-                          setMappings((current) =>
-                            current.map((value, currentIndex) =>
-                              currentIndex === index ? event.target.value : value,
-                            ),
-                          )
-                        }
-                        className={`mapping-select${column.confidence === "ambiguous" || column.confidence === "review" ? " needs-check" : ""}`}
-                      >
-                        <option value="Choose parameter…">Choose parameter…</option>
-                        <option value="Ignore this column">Ignore this column</option>
-                        {candidates.map((candidate) => (
-                          <option key={candidate} value={candidate}>
-                            {candidate}
-                          </option>
-                        ))}
-                        {!candidates.includes(mapping) &&
-                          mapping !== "Choose parameter…" &&
-                          mapping !== "Ignore this column" && (
-                            <option value={mapping}>{mapping}</option>
-                          )}
-                      </select>
-                    </td>
-                    <td>
-                      <span className={`mapping-indicator mapping-${column.confidence}`}>
-                        <span />
-                        {column.confidence === "matched"
-                          ? "Suggested"
-                          : column.confidence === "ignored"
-                            ? "Ignored"
-                            : "Check match"}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="empty-state">No source columns are available.</div>
-        </div>
-      </PageSection>
-      <PageSection
-        icon={FileCheck2}
-        title="Import preview"
-        detail="Rows from the selected workbook will appear here."
-      >
-        <div className="empty-state">No workbook rows are available.</div>
-      </PageSection>
-      <div className="import-footer">
-        <span>
-          <Info size={14} /> No source workbook has been read.
-        </span>
-        <Button className="primary-action" disabled>
-          <ClipboardCheck size={16} /> Confirm mapping <ArrowRight size={15} />
-        </Button>
-      </div>
-    </TeriipShell>
-  );
-}
-
 export function ActivityView() {
   const { account } = useTeriipAuth();
   const restrictedCentre =
@@ -795,261 +650,11 @@ export function ActivityView() {
 }
 
 export function AdminView() {
-  const { account } = useTeriipAuth();
-  const [selected, setSelected] = useState("ALL CENTRES");
-  const [needle, setNeedle] = useState("");
-  const visibleCentres = TERIIP_CENTRES.filter((centre) =>
-    centre.toLowerCase().includes(needle.toLowerCase()),
-  );
-
-  if (account && account.role !== "super_admin") {
-    const centre = account.centreId;
-    return (
-      <TeriipShell
-        eyebrow="CENTRE WORKSPACE"
-        title="Admin overview"
-        description="Only your assigned centre is available to this account."
-      >
-        <div className="centre-strip">
-          <div className="centre-ident">
-            <span className="centre-monogram">{centre?.slice(0, 2).toUpperCase()}</span>
-            <div>
-              <span className="small-label">ASSIGNED CENTRE</span>
-              <strong>{centre}</strong>
-            </div>
-          </div>
-        </div>
-        <div className="metric-grid">
-          <Metric label="CONFIGURED CENTRES" value="1" detail="Your assigned centre" icon={Users} />
-          <Metric
-            label="PARTICIPANT RECORDS"
-            value="0"
-            detail="No Drive data available"
-            icon={Database}
-            color="teal"
-          />
-          <Metric
-            label="DATA COMPLETENESS"
-            value="—"
-            detail="No records available"
-            icon={Gauge}
-            color="blue"
-          />
-          <Metric
-            label="DRIVE STATUS"
-            value="Not connected"
-            detail="Source not configured"
-            icon={FolderSync}
-            color="orange"
-          />
-        </div>
-        <PageSection
-          icon={ClipboardCheck}
-          title="Centre activity"
-          detail="Activity recorded for your assigned centre."
-        >
-          <ActivityTable selectedCentre={centre ?? undefined} />
-        </PageSection>
-      </TeriipShell>
-    );
-  }
-
   return (
     <TeriipShell
       eyebrow="CENTRAL OVERSIGHT"
       title="Admin overview"
-      description="Centre configuration and data-source availability."
-      actions={
-        <Button
-          variant="outline"
-          className="quiet-action"
-          onClick={() => setSelected("ALL CENTRES")}
-        >
-          <RefreshCw size={15} /> Reset view
-        </Button>
-      }
-    >
-      <div className="admin-banner">
-        <div className="admin-banner-icon">
-          <ShieldCheck size={20} />
-        </div>
-        <div>
-          <strong>Workspace data unavailable</strong>
-          <span>
-            {" "}
-            No participant data is available until the approved Google Drive source is connected.
-            Accounts are managed from Team accounts.
-          </span>
-        </div>
-      </div>
-      <div className="admin-selector-row">
-        <div>
-          <p className="small-label">CENTRE VIEW</p>
-          <h2>{selected === "ALL CENTRES" ? "All configured centres" : selected}</h2>
-        </div>
-        <select
-          className="standard-select centre-select"
-          value={selected}
-          onChange={(event) => setSelected(event.target.value)}
-          aria-label="Select centre"
-        >
-          <option>ALL CENTRES</option>
-          {TERIIP_CENTRES.map((centreName) => (
-            <option key={centreName}>{centreName}</option>
-          ))}
-        </select>
-      </div>
-      <div className="metric-grid admin-metrics">
-        <Metric
-          label="CONFIGURED CENTRES"
-          value={selected === "ALL CENTRES" ? String(TERIIP_CENTRES.length) : "1"}
-          detail="Defined in workspace"
-          icon={Users}
-        />
-        <Metric
-          label="PARTICIPANT RECORDS"
-          value="0"
-          detail="No Drive data available"
-          icon={Database}
-          color="teal"
-        />
-        <Metric
-          label="AVG. COMPLETENESS"
-          value="—"
-          detail="No records available"
-          icon={Gauge}
-          color="blue"
-        />
-        <Metric
-          label="DRIVE STATUS"
-          value="Not connected"
-          detail="Source not configured"
-          icon={FolderSync}
-          color="orange"
-        />
-      </div>
-      <div className="admin-grid">
-        <PageSection
-          icon={Users}
-          title="Centre overview"
-          detail="Centre configuration and current data availability."
-          aside={
-            <div className="search-field table-search">
-              <Search size={14} />
-              <Input
-                value={needle}
-                onChange={(event) => setNeedle(event.target.value)}
-                placeholder="Search centres"
-                aria-label="Search centres"
-              />
-            </div>
-          }
-        >
-          <div className="table-wrap">
-            <table className="data-table centre-table">
-              <thead>
-                <tr>
-                  <th>CENTRE</th>
-                  <th>PARTICIPANT RECORDS</th>
-                  <th>COMPLETENESS</th>
-                  <th>CONNECTION</th>
-                  <th aria-label="Actions" />
-                </tr>
-              </thead>
-              <tbody>
-                {visibleCentres.map((centre) => (
-                  <tr key={centre} onClick={() => setSelected(centre)} className="clickable-row">
-                    <td>
-                      <div className="centre-cell">
-                        <span className="centre-mini">{centre.slice(0, 2).toUpperCase()}</span>
-                        <strong>{centre}</strong>
-                      </div>
-                    </td>
-                    <td>0</td>
-                    <td>
-                      <div className="completeness-cell">
-                        <span className="completeness-track">
-                          <span style={{ width: "0%" }} />
-                        </span>
-                        <strong>—</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="connection-status">
-                        <span /> Not connected
-                      </span>
-                    </td>
-                    <td>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`View ${centre}`}
-                        title="View centre"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setSelected(centre);
-                        }}
-                      >
-                        <ArrowRight size={15} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {visibleCentres.length === 0 && (
-            <div className="empty-state">No centre names match that search.</div>
-          )}
-        </PageSection>
-        <div className="admin-side-stack">
-          <PageSection
-            icon={FolderSync}
-            title="Drive setup"
-            detail="Connection and write destination"
-          >
-            <div className="setup-empty">
-              <div className="setup-icon">
-                <FolderSync size={19} />
-              </div>
-              <strong>No Drive connection</strong>
-              <p>
-                Folder IDs, workbook destinations, and institutional credentials are not configured.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled
-                title="Drive configuration is unavailable"
-              >
-                Configuration unavailable
-              </Button>
-            </div>
-          </PageSection>
-          <PageSection icon={Users} title="User management" detail="Centre accounts">
-            <div className="setup-empty small-setup">
-              <div className="setup-icon">
-                <Users size={18} />
-              </div>
-              <strong>Manage centre accounts</strong>
-              <p>Review authorized accounts and manage access within your approved scope.</p>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/manage-users">Manage accounts</Link>
-              </Button>
-            </div>
-          </PageSection>
-        </div>
-      </div>
-      <PageSection icon={ClipboardCheck} title="Latest activity" detail="Latest workflow activity.">
-        <ActivityTable />
-      </PageSection>
-      <div className="admin-disclaimer">
-        <ShieldCheck size={15} />
-        <span>
-          Production access control, hosting, and data-retention settings must be reviewed and
-          approved by the institution.
-        </span>
-      </div>
-    </TeriipShell>
+      description=""
+    />
   );
 }

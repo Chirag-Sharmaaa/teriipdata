@@ -12,3 +12,7 @@
 - [ ] Confirm the discrepancy between the stated 66–67 parameters and the 72 explicit names with the TERIIP data owner. Blocker: institutional confirmation.
 - [ ] Define institutional hosting, authentication, centre isolation, retention, validation, and audit policies. Blocker: institutional decisions and approval.
 - [ ] Implement and test the approved report processing, workbook updates, and Google Drive integration. Blocker: verified parent folder access, all 16 folder/workbook mappings, approved processing/deployment target, and institutional permissions.
+- [ ] Show one shared, live Drive connection status across the workspace pages.
+- [ ] Remove the Excel Import page and its sign-in return path.
+- [ ] Remove duplicate centre overview and activity sections from Admin without adding new sections.
+- [ ] Add local PDF selection and a safe upload action that clearly does not transmit or process reports yet.

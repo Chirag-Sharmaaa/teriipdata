@@ -1,14 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
-  ArrowUpRight,
   Bell,
   ChevronDown,
   ClipboardList,
   Database,
-  FileSpreadsheet,
   FileUp,
   FlaskConical,
+  FolderSync,
   LayoutDashboard,
   ShieldCheck,
   Users,
@@ -17,14 +16,27 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceSettings } from "@/lib/teriip-workspace-settings";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getDriveStats } from "@/lib/drive-stats.functions";
 
 const navigation = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
   { label: "PDF review", to: "/upload", icon: FileUp },
-  { label: "Excel import", to: "/import", icon: FileSpreadsheet },
   { label: "Recent activity", to: "/activity", icon: ClipboardList },
   { label: "Admin overview", to: "/admin", icon: Users },
 ] as const;
+
+function useDriveConnection() {
+  const { account } = useTeriipAuth();
+  const fetchStats = useServerFn(getDriveStats);
+  return useQuery({
+    queryKey: ["drive-stats", account?.id ?? null],
+    queryFn: () => fetchStats(),
+    enabled: Boolean(account?.role),
+    staleTime: 60_000,
+  });
+}
 
 export function TeriipShell({
   children,
@@ -42,6 +54,15 @@ export function TeriipShell({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { activeCentre } = useWorkspaceSettings();
   const { account, authLoading, signOut } = useTeriipAuth();
+  const driveQuery = useDriveConnection();
+  const driveConnected = Boolean(driveQuery.data?.connected);
+  const driveStatus = driveQuery.isLoading
+    ? "Checking connection…"
+    : driveQuery.isError
+      ? "Connection status unavailable"
+      : driveConnected
+        ? "Connected · read-only counts"
+        : "Not connected";
   const activeCentreName = account?.centreId ?? activeCentre;
   const initials =
     (account?.displayName || account?.username || "TERIIP")
@@ -81,15 +102,11 @@ export function TeriipShell({
         <div className="sidebar-spacer" />
         <div className="drive-card">
           <div className="drive-top">
-            <span className="connection-dot" /> <span>Drive workspace</span>
+            <span className={`connection-dot${driveConnected ? " is-connected" : ""}`} />
+            <span>Drive workspace</span>
           </div>
-          <strong>Not connected</strong>
-          <p>Awaiting Drive authorization · no files are read or written</p>
-          <Button variant="outline" size="sm" className="drive-button" asChild>
-            <Link to="/admin">
-              View setup <ArrowUpRight size={13} />
-            </Link>
-          </Button>
+          <strong>{driveStatus}</strong>
+          <p>Centre dataset counts are read-only. PDF processing is not enabled.</p>
         </div>
         {account ? (
           <div className="account-nav">
@@ -139,7 +156,14 @@ export function TeriipShell({
           </div>
           <div className="topbar-right">
             <span className="environment-pill">
-              <span /> No workspace data · Drive not connected
+              <span className={driveConnected ? "is-connected" : ""} />
+              {driveQuery.isLoading
+                ? "Checking Drive…"
+                : driveQuery.isError
+                  ? "Drive status unavailable"
+                  : driveConnected
+                    ? "Drive connected · read-only"
+                    : "Drive not connected"}
             </span>
             <Button variant="ghost" size="icon" aria-label="Notifications" title="Notifications">
               <Bell size={17} />
@@ -150,13 +174,21 @@ export function TeriipShell({
 
         <main className="page-content">
           <div className="connection-notice">
-            <ShieldCheck size={15} />
+            {driveConnected ? <FolderSync size={15} /> : <ShieldCheck size={15} />}
             <span>
-              <strong>Google Drive not connected yet</strong>
+              <strong>
+                {driveQuery.isLoading
+                  ? "Checking Google Drive connection"
+                  : driveQuery.isError
+                    ? "Google Drive connection could not be checked"
+                    : driveConnected
+                      ? "Google Drive connected for read-only counts"
+                      : "Google Drive is not connected"}
+              </strong>
               <span>
-                {" "}
-                No reports or spreadsheets are available. Workspace data will appear after the
-                approved TERIIP Drive source is connected.
+                {driveConnected
+                  ? " Centre dataset totals are available; report processing and spreadsheet updates are not enabled."
+                  : " Centre data is unavailable until the Drive source can be reached."}
               </span>
             </span>
           </div>
