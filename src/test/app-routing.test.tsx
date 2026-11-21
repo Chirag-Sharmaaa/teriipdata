@@ -31,7 +31,6 @@ describe("App routing", () => {
 
     for (const path of [
       "/upload",
-      "/import",
       "/activity",
       "/admin",
       "/auth",
@@ -60,6 +59,7 @@ describe("TERIIP access boundaries", () => {
 
   it("only returns approved in-app pages from a sign-in redirect", () => {
     expect(safeTeriipReturnPath("/activity?filter=Delhi")).toBe("/activity");
+    expect(safeTeriipReturnPath("/import")).toBe("/");
     expect(safeTeriipReturnPath("https://attacker.example/")).toBe("/");
     expect(safeTeriipReturnPath("/unknown")).toBe("/");
   });

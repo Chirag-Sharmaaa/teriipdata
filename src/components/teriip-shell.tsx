@@ -7,9 +7,7 @@ import {
   Database,
   FileUp,
   FlaskConical,
-  FolderSync,
   LayoutDashboard,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -27,15 +25,24 @@ const navigation = [
   { label: "Admin overview", to: "/admin", icon: Users },
 ] as const;
 
-function useDriveConnection() {
+export function useDriveConnection() {
   const { account } = useTeriipAuth();
   const fetchStats = useServerFn(getDriveStats);
-  return useQuery({
-    queryKey: ["drive-stats", account?.id ?? null],
-    queryFn: () => fetchStats(),
-    enabled: Boolean(account?.role),
-    staleTime: 60_000,
+  const queryKey = ["drive-stats", account?.id ?? null];
+  const query = useQuery({
+    queryKey,
+    queryFn: () => fetchStats({ data: { forceRefresh: true } }),
+    enabled: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
+  const refreshNow = async () => {
+    const result = await query.refetch({ throwOnError: true });
+    if (!result.data) throw new Error("Dashboard refresh returned no data.");
+    return result.data;
+  };
+  return { ...query, refreshNow };
 }
 
 export function TeriipShell({
@@ -56,13 +63,6 @@ export function TeriipShell({
   const { account, authLoading, signOut } = useTeriipAuth();
   const driveQuery = useDriveConnection();
   const driveConnected = Boolean(driveQuery.data?.connected);
-  const driveStatus = driveQuery.isLoading
-    ? "Checking connection…"
-    : driveQuery.isError
-      ? "Connection status unavailable"
-      : driveConnected
-        ? "Connected · read-only counts"
-        : "Not connected";
   const activeCentreName = account?.centreId ?? activeCentre;
   const initials =
     (account?.displayName || account?.username || "TERIIP")
@@ -100,14 +100,6 @@ export function TeriipShell({
             })}
         </nav>
         <div className="sidebar-spacer" />
-        <div className="drive-card">
-          <div className="drive-top">
-            <span className={`connection-dot${driveConnected ? " is-connected" : ""}`} />
-            <span>Drive workspace</span>
-          </div>
-          <strong>{driveStatus}</strong>
-          <p>Centre dataset counts are read-only. PDF processing is not enabled.</p>
-        </div>
         {account ? (
           <div className="account-nav">
             <Link to="/settings" className="profile-row" aria-label="Account settings">
@@ -157,13 +149,19 @@ export function TeriipShell({
           <div className="topbar-right">
             <span className="environment-pill">
               <span className={driveConnected ? "is-connected" : ""} />
-              {driveQuery.isLoading
+              {driveQuery.isFetching
                 ? "Checking Drive…"
                 : driveQuery.isError
                   ? "Drive status unavailable"
                   : driveConnected
                     ? "Drive connected · read-only"
-                    : "Drive not connected"}
+                    : driveQuery.data?.status === "disabled"
+                      ? "Drive reads disabled"
+                      : driveQuery.data?.status === "missing_credentials"
+                        ? "Drive credentials missing"
+                        : driveQuery.data
+                          ? "Drive not connected"
+                          : "Drive not checked"}
             </span>
             <Button variant="ghost" size="icon" aria-label="Notifications" title="Notifications">
               <Bell size={17} />
@@ -173,25 +171,6 @@ export function TeriipShell({
         </header>
 
         <main className="page-content">
-          <div className="connection-notice">
-            {driveConnected ? <FolderSync size={15} /> : <ShieldCheck size={15} />}
-            <span>
-              <strong>
-                {driveQuery.isLoading
-                  ? "Checking Google Drive connection"
-                  : driveQuery.isError
-                    ? "Google Drive connection could not be checked"
-                    : driveConnected
-                      ? "Google Drive connected for read-only counts"
-                      : "Google Drive is not connected"}
-              </strong>
-              <span>
-                {driveConnected
-                  ? " Centre dataset totals are available; report processing and spreadsheet updates are not enabled."
-                  : " Centre data is unavailable until the Drive source can be reached."}
-              </span>
-            </span>
-          </div>
           <section className="page-heading">
             <div>
               <p className="eyebrow">{eyebrow}</p>

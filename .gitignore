@@ -7,6 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Environment files can contain server credentials.
+.env
+.env.*
+!.env.example
+.env.local
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+*service_account*.json
+
 node_modules
 dist
 dist-ssr

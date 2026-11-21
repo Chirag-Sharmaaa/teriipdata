@@ -1,8 +1,10 @@
 # Data flow
 
-## Current application flow
+## Current dashboard flow
 
-No fabricated participant values or workflow records are displayed. Because Drive is not connected, the dashboard reports zero records, completeness is unavailable, and report-review, workbook-mapping, activity, and data-dependent admin panels show empty states. These screens do not read files, submit participant data, or simulate successful writes. Authentication uses Lovable Cloud Auth; role membership and profile attributes are separate, and protected database policies scope account reads.
+The authenticated dashboard reads Drive data only after the user selects **Refresh now**. A server function verifies the Supabase session, active role, onboarding state, and centre scope before requesting a Google access token. It reads the configured master-tracker tab and the mapped centre workbooks with a server-only service-account key and the read-only Drive scope. Workbook rows are parsed in memory; the function returns only centre-level tracker values, row counts, age/gender totals, and safe warnings/errors. Participant rows, file contents, tokens, and private keys are never sent to the browser or saved in the database. Aggregate results are cached on the server for ten minutes; a manual refresh bypasses that cache.
+
+Drive reads are disabled unless `TERIIP_DRIVE_READS_ENABLED=true` and both service-account settings are configured on the server. `MASTER_TRACKER_SHEET_ID` and `MASTER_TRACKER_TAB` select the master spreadsheet and worksheet. The `.env.example` setup is for local development; this reader uses the existing direct Google Drive API integration. Supabase authentication and database role checks remain the account and authorization layer. Centre accounts receive only their own centre's aggregates.
 
 ## Intended future flow (not implemented)
 
@@ -13,4 +15,4 @@ No fabricated participant values or workflow records are displayed. Because Driv
 5. A privacy-reviewed audit event records necessary workflow metadata without copying health values into logs.
 6. Temporary files are removed according to the approved retention policy; failures do not report a successful write.
 
-This is a requirements outline only. No real-data step above exists in the current application. The account-audit table is read-scoped but does not yet receive write events because account changes and data operations are disabled.
+PDF upload, extraction, destination workbook writes, and audit events for data operations are not implemented. Do not enable real Drive reads until institutional privacy/security approval and the least-privilege workbook shares are verified.

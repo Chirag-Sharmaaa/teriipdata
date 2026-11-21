@@ -95,12 +95,11 @@ export function centreSlug(centre: string) {
 }
 
 export type TeriipRoutePath =
-  "/" | "/upload" | "/import" | "/activity" | "/admin" | "/settings" | "/manage-users";
+  "/" | "/upload" | "/activity" | "/admin" | "/settings" | "/manage-users";
 
 const safeAppPaths = new Set<TeriipRoutePath>([
   "/",
   "/upload",
-  "/import",
   "/activity",
   "/admin",
   "/settings",
