@@ -40,21 +40,33 @@ export function OnboardingView() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const checkedLink = useRef(false);
+  const checkedLink = useRef("");
 
   // When the person returns from the emailed link, record that the address is confirmed.
   useEffect(() => {
-    if (authLoading || account?.onboarding !== "verify_email" || checkedLink.current) return;
-    checkedLink.current = true;
+    if (
+      authLoading ||
+      account?.onboarding !== "verify_email" ||
+      !account.email ||
+      checkedLink.current === account.email
+    )
+      return;
+    checkedLink.current = account.email;
     void confirmEmail()
       .then(async (result) => {
         if (result.ok) {
           await refreshAccount();
           toast.success("Email address confirmed.");
+        } else {
+          setError(
+            "The email is not confirmed yet. Open the latest confirmation link and try again.",
+          );
         }
       })
-      .catch(() => undefined);
-  }, [account?.onboarding, authLoading, confirmEmail, refreshAccount]);
+      .catch((caught: unknown) => {
+        setError(errorText(caught, "Your email confirmation could not be completed."));
+      });
+  }, [account?.email, account?.onboarding, authLoading, confirmEmail, refreshAccount]);
 
   useEffect(() => {
     if (!authLoading && account && !account.onboarding) void navigate({ to: "/", replace: true });
@@ -66,17 +78,14 @@ export function OnboardingView() {
     setBusy(true);
     try {
       const result = await submitEmail({ data: { email } });
-      const { error: linkError } = await supabase.auth.signInWithOtp({
-        email: result.email,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: `${window.location.origin}/onboarding`,
-        },
-      });
+      const { error: linkError } = await supabase.auth.updateUser(
+        { email: result.email },
+        { emailRedirectTo: `${window.location.origin}/onboarding` },
+      );
       if (linkError)
         throw new Error("The confirmation email could not be sent. Try again shortly.");
       setSentTo(result.email);
-      checkedLink.current = false;
+      checkedLink.current = "";
     } catch (caught) {
       setError(errorText(caught, "Your email address could not be saved."));
     } finally {
@@ -92,6 +101,11 @@ export function OnboardingView() {
     setBusy(true);
     try {
       await completePassword({ data: { password, confirm } });
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError)
+        throw new Error(
+          "Your new password was saved, but sign-in needs refreshing. Sign in again.",
+        );
       await refreshAccount();
       toast.success("Your account is ready.");
       await navigate({ to: "/", replace: true });

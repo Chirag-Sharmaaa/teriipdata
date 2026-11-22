@@ -2,7 +2,10 @@
 
 import { createVerify, generateKeyPairSync } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { createGoogleDriveAccessToken } from "@/lib/google-drive-auth.server";
+import {
+  createGoogleDriveAccessToken,
+  GOOGLE_DRIVE_AND_SHEETS_WRITE_SCOPE,
+} from "@/lib/google-drive-auth.server";
 
 describe("Google Drive service-account authentication", () => {
   it("exchanges a read-only signed assertion for an access token", async () => {
@@ -69,5 +72,32 @@ describe("Google Drive service-account authentication", () => {
         async () => new Response(null, { status: 401 }),
       ),
     ).rejects.toThrow("Google service-account token exchange failed (401).");
+  });
+
+  it("requests spreadsheet write access only for the append workflow", async () => {
+    const { privateKey } = generateKeyPairSync("rsa", {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: "spki", format: "pem" },
+      privateKeyEncoding: { type: "pkcs8", format: "pem" },
+    });
+    const fetcher: typeof fetch = async (_input, init) => {
+      const body = new URLSearchParams(init?.body as string);
+      const assertion = body.get("assertion");
+      const [, encodedClaims] = assertion!.split(".");
+      const claims = JSON.parse(Buffer.from(encodedClaims!, "base64url").toString("utf8")) as {
+        scope: string;
+      };
+      expect(claims.scope).toBe(GOOGLE_DRIVE_AND_SHEETS_WRITE_SCOPE);
+      return Response.json({ access_token: "mock-write-token" });
+    };
+
+    await expect(
+      createGoogleDriveAccessToken(
+        "writer@example.iam.gserviceaccount.com",
+        privateKey,
+        fetcher,
+        GOOGLE_DRIVE_AND_SHEETS_WRITE_SCOPE,
+      ),
+    ).resolves.toBe("mock-write-token");
   });
 });

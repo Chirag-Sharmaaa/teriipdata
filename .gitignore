@@ -19,11 +19,17 @@ lerna-debug.log*
 *credentials*.json
 *service-account*.json
 *service_account*.json
+temp-credentials.csv
+__pycache__/
+*.py[cod]
+scripts/pdf_extraction/*.pdf
+scripts/pdf_extraction/*.csv
 
 node_modules
 dist
 dist-ssr
 .output
+.netlify
 .vinxi
 .tanstack/**
 .nitro

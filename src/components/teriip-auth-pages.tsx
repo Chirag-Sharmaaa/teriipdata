@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import {
   AlertCircle,
   ArrowLeft,
@@ -14,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
 import { supabase } from "@/integrations/supabase/client";
-import { isTemporaryLoginEmail, safeTeriipReturnPath, teriipLoginEmail } from "@/lib/teriip-access";
+import { isTemporaryLoginEmail, safeTeriipReturnPath } from "@/lib/teriip-access";
+import { signInTeriipAccount } from "@/lib/auth-login.functions";
 
 export function AuthFrame({ children }: { children: ReactNode }) {
   return (
@@ -58,6 +60,7 @@ export function AuthView() {
   const { next, flow } = useSearch({ from: "/auth" });
   const { account, authLoading, signOut } = useTeriipAuth();
   const navigate = useNavigate({ from: "/auth" });
+  const signInAccount = useServerFn(signInTeriipAccount);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [invitePassword, setInvitePassword] = useState("");
@@ -66,6 +69,10 @@ export function AuthView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loginLockedUntil, setLoginLockedUntil] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    return Number(window.sessionStorage.getItem("teriip-login-lock") ?? "0");
+  });
 
   const destination = safeTeriipReturnPath(next);
   const finishLogin = useCallback(async () => {
@@ -83,17 +90,44 @@ export function AuthView() {
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const now = Date.now();
+    if (loginLockedUntil > now) {
+      const minutes = Math.ceil((loginLockedUntil - now) / 60_000);
+      setError(
+        `Too many sign-in attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+      );
+      return;
+    }
     setBusy(true);
     setError("");
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: teriipLoginEmail(email),
-      password,
-    });
+    let signInFailed = false;
+    try {
+      const session = await signInAccount({ data: { identifier: email, password } });
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: session.accessToken,
+        refresh_token: session.refreshToken,
+      });
+      signInFailed = Boolean(sessionError);
+    } catch {
+      signInFailed = true;
+    }
     setBusy(false);
-    if (signInError) {
+    if (signInFailed) {
+      const attempts = Number(window.sessionStorage.getItem("teriip-login-attempts") ?? "0") + 1;
+      window.sessionStorage.setItem("teriip-login-attempts", String(attempts));
+      if (attempts >= 5) {
+        const lockUntil = Date.now() + 15 * 60_000;
+        window.sessionStorage.setItem("teriip-login-lock", String(lockUntil));
+        setLoginLockedUntil(lockUntil);
+        window.sessionStorage.removeItem("teriip-login-attempts");
+        setError("Too many sign-in attempts. Try again in 15 minutes.");
+        return;
+      }
       setError("Sign-in failed. Check your email or temporary username and password.");
       return;
     }
+    window.sessionStorage.removeItem("teriip-login-attempts");
+    window.sessionStorage.removeItem("teriip-login-lock");
   }
 
   async function sendReset(event: FormEvent<HTMLFormElement>) {

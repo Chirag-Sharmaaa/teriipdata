@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowDownToLine,
@@ -40,6 +40,17 @@ import { SectionTitle, TeriipShell, useDriveConnection } from "@/components/teri
 import { COMMON_PARAMETERS, CENTRE_EXTENSIONS, TERIIP_CENTRES } from "@/lib/teriip-schema";
 import { useWorkspaceSettings } from "@/lib/teriip-workspace-settings";
 import { useTeriipAuth } from "@/components/teriip-auth-provider";
+import {
+  appendReviewedParticipantRecord,
+  createParticipantExtractionToken,
+  getPdfWorkflowStatus,
+} from "@/lib/pdf-review.functions";
+import {
+  mapExtractorRow,
+  normalizeRecordId,
+  recordIdFilenameWarning,
+  type ExtractedFieldMapping,
+} from "@/lib/pdf-review-mapping";
 import {
   createEmptyCentreStats,
   type CentreDashboardStats,
@@ -1107,34 +1118,270 @@ export function DashboardView() {
   );
 }
 
+const MAX_PARTICIPANT_UPLOAD_BYTES = 15 * 1024 * 1024;
+const EXTRACTION_UNAVAILABLE_MESSAGE =
+  "Automatic extraction is unavailable - please enter values manually";
+
+function extractionServiceEndpoint() {
+  const configured = import.meta.env["VITE_TERIIP_EXTRACTION_SERVICE_URL"];
+  if (!configured) throw new TypeError("Extraction service URL is missing.");
+
+  const url = new URL(configured);
+  const isLocalHttp = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+  if ((url.protocol !== "https:" && !isLocalHttp) || url.username || url.password) {
+    throw new TypeError("Extraction service URL must use HTTPS.");
+  }
+  url.pathname = "/extract";
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 export function UploadView() {
-  const { activeCentre, enabledExtensions } = useWorkspaceSettings();
+  const { activeCentre, enabledExtensions, reviewCentre, setReviewCentre } = useWorkspaceSettings();
+  const { account } = useTeriipAuth();
   const [query, setQuery] = useState("");
-  const [pdfSelected, setPdfSelected] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [diagnostics, setDiagnostics] = useState<ExtractedFieldMapping | null>(null);
+  const [extractionSupported, setExtractionSupported] = useState(false);
+  const [ocrUsed, setOcrUsed] = useState(false);
+  const [workflowEnabled, setWorkflowEnabled] = useState(false);
+  const [checkingWorkflow, setCheckingWorkflow] = useState(true);
+  const [workflowMessage, setWorkflowMessage] = useState("");
+  const [isReading, setIsReading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [savedRowNumber, setSavedRowNumber] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recordIdInputRef = useRef<HTMLInputElement>(null);
+  const saveResultRef = useRef<HTMLParagraphElement>(null);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    kind: "success" | "warning" | "error";
+    message: string;
+  } | null>(null);
+  const [duplicateExistingRow, setDuplicateExistingRow] = useState<number | null>(null);
   const extensionsForCentre = enabledExtensions[activeCentre] ?? false;
-  const parameters = extensionsForCentre
-    ? [...COMMON_PARAMETERS, ...CENTRE_EXTENSIONS]
-    : COMMON_PARAMETERS;
+  const parameters = useMemo(
+    () => (extensionsForCentre ? [...COMMON_PARAMETERS, ...CENTRE_EXTENSIONS] : COMMON_PARAMETERS),
+    [extensionsForCentre],
+  );
+  const isSuperAdmin = account?.role === "super_admin";
+  const assignedCentre = resolveDashboardCentre(account?.centreId);
+  const centreName = isSuperAdmin ? reviewCentre : (assignedCentre?.canonicalName ?? "");
+  const isHinduja = centreName === "P D Hinduja Hospital Mumbai";
+  const extractorAvailable = Boolean(
+    centreName &&
+    !["AIIMS Guwahati", "Amrita Hospital Kochi", "PGIMER Chandigarh"].includes(centreName),
+  );
+  const emptyValues = () => Object.fromEntries(parameters.map((parameter) => [parameter.name, ""]));
+  const filledCount = parameters.filter((parameter) => fieldValues[parameter.name]?.trim()).length;
   const shown = parameters.filter((parameter) =>
     `${parameter.name} ${parameter.category}`.toLowerCase().includes(query.toLowerCase()),
   );
+  const resetReview = () => {
+    setQuery("");
+    setSelectedFileName(null);
+    setUploadMessage(null);
+    setFieldValues(emptyValues());
+    setDiagnostics(null);
+    setExtractionSupported(false);
+    setOcrUsed(false);
+    setConfirming(false);
+    setSavedRowNumber(null);
+    setSaveFeedback(null);
+    setDuplicateExistingRow(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  useEffect(() => {
+    setQuery("");
+    setSelectedFileName(null);
+    setUploadMessage(null);
+    setFieldValues(Object.fromEntries(parameters.map((parameter) => [parameter.name, ""])));
+    setDiagnostics(null);
+    setExtractionSupported(false);
+    setOcrUsed(false);
+    setConfirming(false);
+    setSavedRowNumber(null);
+    setSaveFeedback(null);
+    setDuplicateExistingRow(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [centreName, parameters]);
+
+  useEffect(() => {
+    if (saveFeedback) {
+      saveResultRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    }
+  }, [saveFeedback]);
+
+  useEffect(() => {
+    let active = true;
+    void getPdfWorkflowStatus({ data: {} })
+      .then((status) => {
+        if (!active) return;
+        setWorkflowEnabled(status.enabled);
+        setWorkflowMessage(status.message);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setWorkflowEnabled(false);
+        setWorkflowMessage(
+          error instanceof Error ? error.message : "The workflow status could not be checked.",
+        );
+      })
+      .finally(() => {
+        if (active) setCheckingWorkflow(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const readSelectedFile = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file || !centreName || !workflowEnabled) return;
+    const extension = isHinduja ? ".csv" : ".pdf";
+    if (!file.name.toLowerCase().endsWith(extension)) {
+      setUploadMessage(`Choose a ${isHinduja ? "CSV" : "PDF"} file for this centre.`);
+      return;
+    }
+    if (file.size > MAX_PARTICIPANT_UPLOAD_BYTES) {
+      setUploadMessage("The selected file must be 15 MB or smaller.");
+      return;
+    }
+
+    setIsReading(true);
+    setUploadMessage(null);
+    setDiagnostics(null);
+    setFieldValues(emptyValues());
+    setSavedRowNumber(null);
+    setSaveFeedback(null);
+    setDuplicateExistingRow(null);
+    setSelectedFileName(file.name);
+    try {
+      const { token } = await createParticipantExtractionToken({
+        data: { centreName },
+      });
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const response = await fetch(extractionServiceEndpoint(), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+        signal: AbortSignal.timeout(180_000),
+      });
+      if (!response.ok) {
+        if (response.status === 413) {
+          setUploadMessage("The selected file must be 15 MB or smaller.");
+        } else if (response.status === 401) {
+          setUploadMessage(EXTRACTION_UNAVAILABLE_MESSAGE);
+        } else {
+          setUploadMessage("The report could not be processed. Please enter values manually.");
+        }
+        return;
+      }
+      const result = (await response.json()) as {
+        status?: unknown;
+        row?: unknown;
+        ocrUsed?: unknown;
+      };
+      if (
+        result.status !== "ok" ||
+        !result.row ||
+        typeof result.row !== "object" ||
+        Array.isArray(result.row)
+      ) {
+        setUploadMessage("The report could not be processed. Please enter values manually.");
+        return;
+      }
+      const mapping = mapExtractorRow(
+        result.row as Record<string, unknown>,
+        result.ocrUsed === true,
+        parameters,
+      );
+      setFieldValues({ ...emptyValues(), ...mapping.values });
+      setDiagnostics(mapping);
+      setExtractionSupported(true);
+      setOcrUsed(result.ocrUsed === true);
+    } catch (error) {
+      setFieldValues(emptyValues());
+      setDiagnostics(null);
+      setExtractionSupported(false);
+      setOcrUsed(false);
+      setUploadMessage(
+        error instanceof TypeError || (error instanceof Error && error.name === "TimeoutError")
+          ? EXTRACTION_UNAVAILABLE_MESSAGE
+          : error instanceof Error
+            ? error.message
+            : "The report could not be processed. Please enter values manually.",
+      );
+    } finally {
+      setIsReading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const startReviewConfirmation = () => {
+    const recordId = fieldValues["RecordID"] ?? "";
+    const warning = recordIdFilenameWarning(recordId, selectedFileName);
+    setDuplicateExistingRow(null);
+    if (!recordId.trim()) {
+      setConfirming(false);
+      setSaveFeedback({ kind: "error", message: warning! });
+      recordIdInputRef.current?.focus();
+      return;
+    }
+    setSaveFeedback(warning ? { kind: "warning", message: warning } : null);
+    setConfirming(true);
+  };
+
+  const saveReviewedRow = async (allowDuplicate = false) => {
+    if (!centreName || !workflowEnabled) return;
+    setIsSaving(true);
+    setSaveFeedback(null);
+    try {
+      const result = await appendReviewedParticipantRecord({
+        data: { centreName, values: fieldValues, allowDuplicate },
+      });
+      if (result.status === "duplicate") {
+        setDuplicateExistingRow(result.existingRowNumber);
+        setConfirming(true);
+        setSaveFeedback({
+          kind: "warning",
+          message: `Record ID "${fieldValues["RecordID"]?.trim()}" already exists in the "${result.sheetName}" tab at row ${result.existingRowNumber}. Nothing has been written. Confirm "Add anyway" only if this duplicate is intentional.`,
+        });
+        return;
+      }
+      setSavedRowNumber(result.rowNumber);
+      setConfirming(false);
+      setDuplicateExistingRow(null);
+      setSaveFeedback({
+        kind: "success",
+        message: `Row ${result.rowNumber} was added to the "${result.sheetName}" tab in ${centreName}'s Google Sheet.`,
+      });
+    } catch (error) {
+      setSaveFeedback({
+        kind: "error",
+        message: error instanceof Error ? error.message : "The row could not be added.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <TeriipShell
       eyebrow="RECORD WORKFLOW"
       title="PDF report review"
-      description="Review report fields when an approved report source is available."
+      description="Check and correct extracted values before adding one row to the selected centre's Google Sheet."
       actions={
         <Button
           variant="outline"
           className="quiet-action"
-          onClick={() => {
-            setQuery("");
-            setPdfSelected(false);
-            setUploadMessage(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-          }}
+          disabled={isReading || isSaving}
+          onClick={resetReview}
         >
           Reset review
         </Button>
@@ -1143,45 +1390,94 @@ export function UploadView() {
       <div className="workflow-safety">
         <LockKeyhole size={16} />
         <div>
-          <strong>No report is available to review.</strong>
-          <span>
-            {" "}
-            Report processing is not configured. Do not enter real participant information here.
-          </span>
+          <strong>Handle participant reports carefully.</strong>
+          <span> Files and extracted values stay in memory and are not saved by this app.</span>
         </div>
       </div>
+      {!workflowEnabled && (
+        <p className="pdf-upload-message" role="status" aria-live="polite">
+          {checkingWorkflow ? "Checking workflow readiness..." : workflowMessage}
+        </p>
+      )}
+      {isSuperAdmin ? (
+        <div className="pdf-file-control centre-select-control">
+          <label htmlFor="review-centre">Centre for this report</label>
+          <select
+            id="review-centre"
+            className="standard-select"
+            value={reviewCentre}
+            disabled={isReading || isSaving || confirming}
+            onChange={(event) => setReviewCentre(event.target.value)}
+          >
+            <option value="">Choose a centre</option>
+            {DASHBOARD_CENTRES.map((centre) => (
+              <option key={centre.canonicalName} value={centre.canonicalName}>
+                {centre.canonicalName}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <p className="review-centre-lock">
+          {centreName ? `Assigned centre: ${centreName}` : "No centre is assigned to this account."}
+        </p>
+      )}
       <div className="pdf-upload-controls">
         <div className="pdf-file-control">
-          <label htmlFor="report-pdf">Participant report (PDF)</label>
+          <label htmlFor="report-pdf">Participant report ({isHinduja ? "CSV" : "PDF"})</label>
           <Input
             ref={fileInputRef}
             id="report-pdf"
             type="file"
-            accept="application/pdf,.pdf"
-            aria-label="Choose a participant PDF report"
+            accept={isHinduja ? "text/csv,.csv" : "application/pdf,.pdf"}
+            disabled={
+              !centreName ||
+              !workflowEnabled ||
+              checkingWorkflow ||
+              !extractorAvailable ||
+              isReading ||
+              isSaving
+            }
+            aria-label={`Choose a participant ${isHinduja ? "CSV" : "PDF"} report`}
             onChange={(event) => {
               const file = event.currentTarget.files?.[0];
-              const isPdf = Boolean(
-                file &&
-                (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")),
+              const isExpectedFile = Boolean(
+                file && file.name.toLowerCase().endsWith(isHinduja ? ".csv" : ".pdf"),
               );
-              setPdfSelected(isPdf);
-              setUploadMessage(file && !isPdf ? "Please select a PDF file." : null);
+              setSelectedFileName(isExpectedFile && file ? file.name : null);
+              setUploadMessage(
+                file && !isExpectedFile
+                  ? `Please select a ${isHinduja ? "CSV" : "PDF"} file.`
+                  : null,
+              );
             }}
           />
         </div>
-        <Button
-          className="primary-action"
-          disabled={!pdfSelected}
-          onClick={() =>
-            setUploadMessage(
-              "The PDF was not sent. Report extraction and Drive updates are not configured yet.",
-            )
-          }
-        >
-          <FileText size={16} /> Upload PDF
-        </Button>
+        {extractorAvailable && (
+          <Button
+            className="primary-action"
+            disabled={
+              !selectedFileName ||
+              !centreName ||
+              !workflowEnabled ||
+              checkingWorkflow ||
+              isReading ||
+              isSaving
+            }
+            onClick={() => void readSelectedFile()}
+          >
+            <FileText size={16} />{" "}
+            {isReading ? (isHinduja ? "Reading CSV..." : "Reading PDF...") : "Upload and read"}
+          </Button>
+        )}
       </div>
+      {!extractorAvailable && centreName && (
+        <p className="review-hint" role="status">
+          No extractor is available for this centre yet. All fields below are ready for manual
+          entry.
+        </p>
+      )}
+      {centreName && <p className="review-centre-lock">Destination: {centreName}'s Google Sheet</p>}
       {uploadMessage && (
         <p className="pdf-upload-message" role="status" aria-live="polite">
           {uploadMessage}
@@ -1192,22 +1488,40 @@ export function UploadView() {
           <FileText size={20} />
         </div>
         <div className="summary-file">
-          <strong>No report selected</strong>
-          <span>Waiting for an approved report source</span>
+          <strong>{selectedFileName ?? "No report selected"}</strong>
+          <span>
+            {centreName ? `Review for ${centreName}` : "Choose the destination centre first"}
+          </span>
         </div>
-        <Badge variant="outline" className="status-badge status-pending">
-          <span /> Unavailable
+        <Badge
+          variant="outline"
+          className={`status-badge ${selectedFileName ? "status-good" : "status-pending"}`}
+        >
+          <span /> {isReading ? "Reading" : selectedFileName ? "Ready to review" : "Waiting"}
         </Badge>
         <div className="summary-progress">
-          <span>0 of {parameters.length} fields populated</span>
+          <span>
+            {filledCount} of {parameters.length} fields populated
+          </span>
           <div className="mini-progress">
-            <span style={{ width: "0%" }} />
+            <span
+              style={{
+                width: `${parameters.length ? (filledCount / parameters.length) * 100 : 0}%`,
+              }}
+            />
           </div>
         </div>
       </div>
       <div className="extension-note">
-        Common parameters are shown here. Centre-specific parameters remain separate.
+        {parameters.length} editable fields are shown. Extractor-only values are listed separately
+        below.
       </div>
+      {ocrUsed && (
+        <p className="pdf-upload-message" role="status">
+          OCR was used on this report. Populated fields are highlighted for careful manual checking
+          because the extractor does not track OCR provenance per field.
+        </p>
+      )}
       <div className="review-toolbar">
         <div className="search-field">
           <Search size={15} />
@@ -1236,26 +1550,60 @@ export function UploadView() {
           </thead>
           <tbody>
             {shown.map((parameter) => {
-              const isIdentity = parameter.category === "Identity";
+              const value = fieldValues[parameter.name] ?? "";
+              const needsReview = diagnostics?.manualReviewFields.includes(parameter.name) ?? false;
+              const fromOcr = diagnostics?.ocrFields.includes(parameter.name) ?? false;
+              const rowClass = [
+                value ? "" : "missing-row",
+                needsReview ? "review-row-manual" : "",
+                fromOcr ? "review-row-ocr" : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
               return (
-                <tr key={parameter.name} className="missing-row">
+                <tr key={parameter.name} className={rowClass}>
                   <td>
                     <strong>{parameter.name}</strong>
                     <span className="parameter-category">{parameter.category}</span>
                   </td>
                   <td>
                     <Input
-                      value=""
-                      disabled
+                      ref={parameter.name === "RecordID" ? recordIdInputRef : undefined}
+                      value={value}
+                      disabled={
+                        !workflowEnabled ||
+                        checkingWorkflow ||
+                        isReading ||
+                        isSaving ||
+                        confirming ||
+                        savedRowNumber !== null
+                      }
+                      type="text"
+                      inputMode={parameter.kind === "number" ? "decimal" : undefined}
                       aria-label={`Value for ${parameter.name}`}
-                      placeholder={isIdentity ? "Unavailable" : "Not available"}
+                      placeholder="Enter or review value"
+                      onChange={(event) => {
+                        setSaveFeedback(null);
+                        setDuplicateExistingRow(null);
+                        setFieldValues((current) => ({
+                          ...emptyValues(),
+                          ...current,
+                          [parameter.name]: event.target.value,
+                        }));
+                      }}
                     />
                   </td>
                   <td className="unit-cell">{parameter.unit ?? "—"}</td>
                   <td>
-                    <span className="review-state review-missing">
+                    <span className={`review-state ${value ? "review-filled" : "review-missing"}`}>
                       <span />
-                      Waiting for report
+                      {needsReview
+                        ? "Manual review"
+                        : fromOcr
+                          ? "OCR value"
+                          : value
+                            ? "Ready to check"
+                            : "Empty"}
                     </span>
                   </td>
                 </tr>
@@ -1264,18 +1612,110 @@ export function UploadView() {
           </tbody>
         </table>
       </div>
+      {diagnostics && extractionSupported && (
+        <div className="extractor-diagnostics">
+          <details>
+            <summary>
+              Extractor values with no matching page field (
+              {diagnostics.unmatchedExtractorFields.length})
+            </summary>
+            <p>
+              {diagnostics.unmatchedExtractorFields.length
+                ? diagnostics.unmatchedExtractorFields.join(", ")
+                : "None"}
+            </p>
+          </details>
+          <details>
+            <summary>
+              Page fields this centre's extractor does not map (
+              {diagnostics.unmappedPageFields.length})
+            </summary>
+            <p>
+              {diagnostics.unmappedPageFields.length
+                ? diagnostics.unmappedPageFields.join(", ")
+                : "None"}
+            </p>
+          </details>
+        </div>
+      )}
       <div className="review-bottom">
         <div className="review-hint">
           <CircleHelp size={15} />
-          <span>No report data is available. Extraction has not taken place.</span>
+          <span>
+            Empty fields remain blank and can be completed manually. RecordID is required.
+          </span>
         </div>
-        <Button className="primary-action" disabled>
-          <ClipboardCheck size={16} /> Confirm review <ArrowRight size={15} />
-        </Button>
+        <div className="review-submit">
+          <Button
+            className="primary-action"
+            disabled={
+              !centreName ||
+              !workflowEnabled ||
+              checkingWorkflow ||
+              isReading ||
+              isSaving ||
+              confirming ||
+              savedRowNumber !== null
+            }
+            onClick={startReviewConfirmation}
+          >
+            <ClipboardCheck size={16} /> Confirm review <ArrowRight size={15} />
+          </Button>
+          {!confirming && saveFeedback && (
+            <p
+              ref={saveResultRef}
+              className={`review-save-result review-save-${saveFeedback.kind}`}
+              role={saveFeedback.kind === "error" ? "alert" : "status"}
+              aria-live="polite"
+            >
+              {saveFeedback.message}
+            </p>
+          )}
+        </div>
       </div>
+      {confirming && centreName && (
+        <div className="review-confirmation" role="group" aria-label="Confirm destination">
+          <strong>Add this row to {centreName}'s sheet?</strong>
+          <span>RecordID: {fieldValues["RecordID"]?.trim()}</span>
+          {saveFeedback && (
+            <p
+              ref={saveResultRef}
+              className={`review-save-result review-save-${saveFeedback.kind}`}
+              role={saveFeedback.kind === "error" ? "alert" : "status"}
+              aria-live="polite"
+            >
+              {saveFeedback.message}
+            </p>
+          )}
+          <div>
+            <Button
+              variant="outline"
+              disabled={isSaving}
+              onClick={() => {
+                setConfirming(false);
+                setDuplicateExistingRow(null);
+                setSaveFeedback(null);
+              }}
+            >
+              Go back
+            </Button>
+            <Button
+              className="primary-action"
+              disabled={isSaving}
+              onClick={() => void saveReviewedRow(duplicateExistingRow !== null)}
+            >
+              {isSaving
+                ? "Adding row..."
+                : duplicateExistingRow !== null
+                  ? "Add anyway"
+                  : "Confirm and add row"}
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="workflow-footnote">
-        <Info size={14} /> Approved PDF extraction and a verified destination are required before
-        this workflow can process data.
+        <Info size={14} /> Reports are limited to 15 MB. The extraction service and approved Google
+        Sheets access must be enabled before real participant data can be processed.
       </div>
     </TeriipShell>
   );

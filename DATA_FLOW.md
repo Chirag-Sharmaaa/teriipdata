@@ -6,13 +6,12 @@ The authenticated dashboard reads Drive data only after the user selects **Refre
 
 Drive reads are disabled unless `TERIIP_DRIVE_READS_ENABLED=true` and both service-account settings are configured on the server. `MASTER_TRACKER_SHEET_ID` and `MASTER_TRACKER_TAB` select the master spreadsheet and worksheet. The `.env.example` setup is for local development; this reader uses the existing direct Google Drive API integration. Supabase authentication and database role checks remain the account and authorization layer. Centre accounts receive only their own centre's aggregates.
 
-## Intended future flow (not implemented)
+## PDF review and append flow (implemented, approval-gated)
 
-1. An authenticated user submits one PDF or workbook to an institution-approved service.
-2. The service verifies the caller and centre authorization itself, validates file type/size, and processes data locally using approved tools.
-3. Extracted values are shown for manual verification; validation rules are supplied and approved by the institution.
-4. After explicit confirmation, the service writes only to the authorized centre destination using approved Drive permissions.
-5. A privacy-reviewed audit event records necessary workflow metadata without copying health values into logs.
-6. Temporary files are removed according to the approved retention policy; failures do not report a successful write.
+1. An authenticated user selects a centre (Super Admin) or uses the centre assigned to the account (centre users). The server checks the role and assignment; it never trusts the browser's centre as authorization.
+2. The app sends one PDF, or a CSV for P D Hinduja, to a localhost-only Python service with a shared secret. The service uses the existing extractor and sends OCR images to Tesseract via stdin/stdout.
+3. Extracted values are matched by field name and returned for editing. Empty fields remain editable; unmatched extractor/page fields are listed; OCR and manual-review values are highlighted.
+4. After the user confirms the displayed centre and RecordID, the server checks for a duplicate and maps reviewed values to Sheet columns by header name before appending one row.
+5. Uploaded files and participant values are held in memory only; the app does not write them to its database, files, or logs. Only the destination Google Sheet receives an appended row.
 
-PDF upload, extraction, destination workbook writes, and audit events for data operations are not implemented. Do not enable real Drive reads until institutional privacy/security approval and the least-privilege workbook shares are verified.
+The workflow requires `TERIIP_PARTICIPANT_WORKFLOW_APPROVED=true`, Drive access enabled, an active local extraction service, and the Google Sheets API enabled for the service-account project. It remains disabled by default until institutional privacy/security approval and least-privilege workbook shares are verified. No participant-level audit events are currently recorded.

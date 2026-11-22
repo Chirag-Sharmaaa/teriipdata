@@ -7,15 +7,15 @@ The TERIIP workspace interface includes a server-side, read-only Google Drive st
 - Centre dashboard and an administrator overview for the 16 configured centres.
 - PDF review table for the complete common parameter list; values remain unavailable without a report source.
 - Recent activity centre filter; history is empty until a workflow source is connected.
-- Invite-only email/password sign-in and password-recovery screens, backed by Lovable Cloud Auth.
+- Invite-only email/password sign-in and password-recovery screens, backed by the configured Supabase project.
 - Separate profile and role-membership records, database access policies, and protected routes/server functions.
 - Manual Drive refresh for aggregate row counts, filled-cell completeness, and file modification times; no workbook contents are returned to the browser.
 
 ## Not available yet
 
-No TERIIP accounts or role assignments have been provisioned. Secure account invitations and account changes remain paused; the protected team view can only list accounts that an authenticated administrator is authorized to see. There is no PDF parsing, local OCR, actual file upload, workbook writing, or verified production email delivery. A protected account-audit table exists, but account changes are not enabled and no audit writes are currently produced. The preview is not approved for participant data. Keep Drive reads disabled until institutional approval is verified.
+Account provisioning requires the new Supabase project, schema setup, and server-only service key. The PDF/CSV workflow depends on a separate local Python service and does not work from a Netlify-hosted server.
 
-Production work is not complete in this preview. The current application template runs TanStack Start on a Worker with Lovable Cloud authentication and database policies; it is not a local Python/FastAPI processing service. Implementing real-data functions requires a confirmed hosting/privacy decision, verified Drive account and destination mappings, approved retention and validation rules, secure account provisioning and audit writes, plus deployment/security review.
+The application targets TanStack Start on Netlify with a separately managed Supabase backend. Apply the database setup and configure Auth redirects and email delivery before account creation. Obtain institutional approval for the hosting region, data handling, retention, and real-data workflows before using participant data.
 
 ## Schema note
 

@@ -4,6 +4,8 @@ import { TERIIP_CENTRES } from "@/lib/teriip-schema";
 type WorkspaceSettingsValue = {
   activeCentre: string;
   setActiveCentre: (centre: string) => void;
+  reviewCentre: string;
+  setReviewCentre: (centre: string) => void;
   enabledExtensions: Record<string, boolean>;
   setCentreExtensions: (centre: string, enabled: boolean) => void;
 };
@@ -12,16 +14,19 @@ const WorkspaceSettingsContext = createContext<WorkspaceSettingsValue | null>(nu
 
 export function WorkspaceSettingsProvider({ children }: { children: ReactNode }) {
   const [activeCentre, setActiveCentre] = useState<string>(TERIIP_CENTRES[0] ?? "AIIMS Bhopal");
+  const [reviewCentre, setReviewCentre] = useState("");
   const [enabledExtensions, setEnabledExtensions] = useState<Record<string, boolean>>({});
   const value = useMemo(
     () => ({
       activeCentre,
       setActiveCentre,
+      reviewCentre,
+      setReviewCentre,
       enabledExtensions,
       setCentreExtensions: (centre: string, enabled: boolean) =>
         setEnabledExtensions((current) => ({ ...current, [centre]: enabled })),
     }),
-    [activeCentre, enabledExtensions],
+    [activeCentre, reviewCentre, enabledExtensions],
   );
 
   return (

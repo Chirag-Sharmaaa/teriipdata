@@ -116,11 +116,20 @@ describe("TERIIP first-login accounts", () => {
     expect(passwordProblem("twelve-chars", "twelve-charz")).toBe("The passwords do not match.");
   });
 
-  it("only sends account links back to TERIIP-hosted sites", () => {
-    expect(safeAccountLinkOrigin("https://teriipdata.lovable.app")).toBe(
-      "https://teriipdata.lovable.app",
-    );
+  it("only sends account links back to allowed TERIIP sites", () => {
+    expect(safeAccountLinkOrigin("http://localhost:8080")).toBe("http://localhost:8080");
     expect(safeAccountLinkOrigin("https://attacker.example")).toBeNull();
-    expect(safeAccountLinkOrigin("https://teriipdata.lovable.app.attacker.example")).toBeNull();
+  });
+
+  it("allows only exact deployment origins configured for account links", () => {
+    const previous = process.env["TERIIP_AUTH_REDIRECT_ORIGINS"];
+    process.env["TERIIP_AUTH_REDIRECT_ORIGINS"] = "https://teriip.example,https://admin.example";
+    try {
+      expect(safeAccountLinkOrigin("https://teriip.example")).toBe("https://teriip.example");
+      expect(safeAccountLinkOrigin("https://teriip.example.attacker.invalid")).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env["TERIIP_AUTH_REDIRECT_ORIGINS"];
+      else process.env["TERIIP_AUTH_REDIRECT_ORIGINS"] = previous;
+    }
   });
 });

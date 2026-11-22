@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isValidRealEmail, onboardingStage, passwordProblem } from "@/lib/teriip-access";
+import {
+  isTemporaryLoginEmail,
+  isValidRealEmail,
+  onboardingStage,
+  passwordProblem,
+} from "@/lib/teriip-access";
 
 async function loadAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -35,44 +40,39 @@ export const submitOnboardingEmail = createServerFn({ method: "POST" })
     if (typeof expected === "string" && expected && expected !== data.email) {
       throw new Error("Use the email address registered for this headquarters account.");
     }
+    const { data: usedProfile, error: profileError } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", data.email)
+      .maybeSingle();
+    if (profileError) throw new Error("Your email address could not be checked. Try again.");
+    if (usedProfile && usedProfile.id !== user.id) {
+      throw new Error("That email address is already used by another TERIIP account.");
+    }
     const { error } = await admin.auth.admin.updateUserById(user.id, {
-      email: data.email,
-      email_confirm: true,
       app_metadata: {
         ...meta,
         teriip_onboarding: "verify_email",
         teriip_pending_email: data.email,
       },
     });
-    if (error) {
-      throw new Error(
-        /already|registered|exists/i.test(error.message)
-          ? "That email address is already used by another TERIIP account."
-          : "Your email address could not be saved. Try again.",
-      );
-    }
+    if (error) throw new Error("Your email address could not be saved. Try again.");
     return { ok: true as const, email: data.email };
   });
 
-/** Step 2: only a session opened from the emailed link proves the address belongs to them. */
+/** Step 2: Supabase changes the account email only after its verification link is used. */
 export const confirmOnboardingEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { admin, user } = await loadUser(context.userId);
     const meta = { ...(user.app_metadata ?? {}) } as Record<string, unknown>;
     if (onboardingStage(meta) !== "verify_email") return { ok: false as const };
-    const amr = (
-      context.claims as { amr?: Array<{ method?: string; timestamp?: number } | string> }
-    ).amr;
-    const now = Date.now() / 1000;
-    const fromEmailLink = (amr ?? []).some((entry) =>
-      typeof entry === "string"
-        ? entry === "otp" || entry === "magiclink"
-        : (entry.method === "otp" || entry.method === "magiclink") &&
-          typeof entry.timestamp === "number" &&
-          now - entry.timestamp < 60 * 60,
-    );
-    if (!fromEmailLink || user.email !== meta["teriip_pending_email"])
+    if (
+      !user.email_confirmed_at ||
+      user.email !== meta["teriip_pending_email"] ||
+      !user.email ||
+      isTemporaryLoginEmail(user.email)
+    )
       return { ok: false as const };
     const { error } = await admin.auth.admin.updateUserById(user.id, {
       app_metadata: { ...meta, teriip_onboarding: "password", teriip_pending_email: null },

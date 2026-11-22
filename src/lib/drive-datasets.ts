@@ -1,14 +1,14 @@
 import type { TERIIP_CENTRES } from "@/lib/teriip-schema";
 
-/** Verified destination dataset for each centre inside "Sample Reports TERIIP PHASE - I". */
+/** Individually shared Google Sheets used as centre dataset destinations. */
 export const CENTRE_DATASETS: Record<
   (typeof TERIIP_CENTRES)[number],
   { fileId: string; fileName: string; googleSheet: boolean; worksheetName?: string }
 > = {
   "AIIMS Bhopal": {
-    fileId: "169ccqpE-TVdGK__papPJ-PyWkpFPPqx_",
-    fileName: "AIIMS_Bhopal_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1bt_Cip5gHWVJQW9D1LYnIqwlsAcReO1GxpoFKvvaw6g",
+    fileName: "AIIMS_Bhopal_Dataset",
+    googleSheet: true,
   },
   Bhatinda: {
     fileId: "1sbDv-1_HJlPpnrxFJ_2tvu4vKnJXZsz-VcHaMsJbyHQ",
@@ -16,9 +16,9 @@ export const CENTRE_DATASETS: Record<
     googleSheet: true,
   },
   Delhi: {
-    fileId: "1qBdUf-ayDuVXJqOJnwHicQmtTG_7AX-9",
-    fileName: "AIIMS_Delhi_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1ZKGw6t1ZfHzer3YoSOxhJJ9COPjSdXmkMVS3tvZvsRg",
+    fileName: "AIIMS_Delhi_Dataset",
+    googleSheet: true,
   },
   Guwahati: {
     fileId: "1kfuOPWsht4X-QkFxNsnpgb-tRBvPeN_-pu6VE9AH6vs",
@@ -26,61 +26,59 @@ export const CENTRE_DATASETS: Record<
     googleSheet: true,
   },
   Jodhpur: {
-    fileId: "1GDgo_6havDLz23F598t3N7uRclwva0SB",
-    fileName: "AIIMS_Jodhpur_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1dP_rCLe1-jvknPmIWWY2vWoa08Tq-uIcPDK-FULIURo",
+    fileName: "AIIMS_Jodhpur_Dataset",
+    googleSheet: true,
   },
   Raipur: {
-    fileId: "1rUwbjY9iquEGaEcHJKA5THgZ9Ipe_YM2",
-    fileName: "AIIMS_Raipur_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1o2AKIihk7mgv0fDZVfkfTfrFVE9v2O-tH68Noq2WOoM",
+    fileName: "AIIMS_Raipur_Dataset",
+    googleSheet: true,
   },
   Kalyani: {
-    fileId: "17Rp4Ynj1vqAt60IhrVWGuwqt4f2TPYwM",
-    fileName: "AIIMS_Kalyani_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1B1U_uKJN6G2WXvSt6Z6MwocMF8cdbWjN_R-k7zG0KFc",
+    fileName: "AIIMS_Kalyani_Dataset",
+    googleSheet: true,
   },
   "Amrita Kochi": {
-    fileId: "1PeVyWUAYWN-mVqQb5Ba_Umjh8OJLXvkq",
-    fileName: "Copy of ICMR Lab Results.xlsx",
-    googleSheet: false,
-    worksheetName: "Results",
+    fileId: "1Yvfmdck7fW4UcdyaMpBP0WTzPtQFy07XVCN4wYw0Yvs",
+    fileName: "Amrita_Kochi_Dataset",
+    googleSheet: true,
   },
   "BCCI Guwahati": {
-    fileId: "1sgiTKloh6o13j_LWuHETnEyKH2pV_xan",
-    fileName: "BCCI_Guwahati_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1JB4j_WSMRXHrpCPrBuoxiaqz1keBk40EN0hrXkT82Q8",
+    fileName: "BCCI_Guwahati_Dataset",
+    googleSheet: true,
   },
   "NIRRH Port Blair": {
-    fileId: "1VGR02MsjN_xfiO0FT1-LoS-J_kv4iND-",
-    fileName: "ICMR_NIRRH_Dataset.xlsx",
-    googleSheet: false,
-    worksheetName: "NIRRH DATASHEET",
+    fileId: "1I7l_fO_7WpNbi7xdBWmz2ysSxoRUggEEkWz9vOKe_n8",
+    fileName: "ICMR_NIRRH_Dataset",
+    googleSheet: true,
   },
   "JSS Mysore": {
-    fileId: "1w3L7daIgIybS2jlEAxfEOIMNPi-CL04d",
-    fileName: "JSS_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1LwJn3nGyMs1wJif5Sk2YGRORBBVMGC3uMu-Z7j8QM-8",
+    fileName: "JSS_Dataset",
+    googleSheet: true,
   },
   "KGMU Lucknow": {
-    fileId: "1JaG5EorW7UXetZRNlNq4o4qKf6jJrP5O",
-    fileName: "KGMU_Lucknow_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1JkkqRdzVDF52U_AeiBICvyOANPDQ7Y45vC7ybMiLw2Y",
+    fileName: "KGMU_Lucknow_Dataset",
+    googleSheet: true,
   },
   "KIMS Bhubaneswar": {
-    fileId: "1sp-RhuOOWlq3mOxBac27GN7ohUycHRNl",
-    fileName: "KIMS_Bhubaneswar_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1ti_DVkIs_Uikbg4BrnhBBhm2UvKbZdt7EBX8PPxXAYs",
+    fileName: "KIMS_Bhubaneswar_Dataset",
+    googleSheet: true,
   },
   "KMC Manipal": {
-    fileId: "15o5eBhk7cgWnOc16_ovwpcIwomSv4et-",
-    fileName: "KMC_Manipal_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1csaFnYswBOAXMjYpUSUVzGRK80Tvyf_bCkxY0gEkYyc",
+    fileName: "KMC_Manipal_Dataset",
+    googleSheet: true,
   },
   "P D Hinduja": {
-    fileId: "1t4DuH4j0yUZpR87Uw03ZyUkUrcbenLry",
-    fileName: "PD_Hinduja_Dataset.xlsx",
-    googleSheet: false,
+    fileId: "1-ZyuaANKpNjwV39iFPP-MQdrmkGpy7gjbHta-TXYbws",
+    fileName: "PD_Hidnuja_Dataset",
+    googleSheet: true,
   },
   "PGIMER Chandigarh": {
     fileId: "1KKEuehVGFn9M8j4QISOaDJ1m3X_IXYHuHvar7KB6nfg",

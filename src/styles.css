@@ -240,6 +240,29 @@ button:disabled { cursor: not-allowed; }
 .workflow-safety > svg { flex: none; margin-top: 1px; }
 .workflow-safety strong { color: var(--foreground); font-weight: 650; }
 .workflow-safety div span { color: var(--muted-foreground); }
+.pdf-upload-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-top: 15px; }
+.pdf-file-control { display: grid; gap: 5px; min-width: min(100%, 260px); }
+.pdf-file-control label { color: var(--muted-foreground); font-size: 10px; }
+.pdf-file-control input[type="file"] { max-width: 430px; font-size: 10px; }
+.centre-select-control { margin-top: 15px; max-width: 360px; }
+.review-centre-lock { margin: 8px 0 0; color: var(--muted-foreground); font-size: 10px; }
+.pdf-upload-message { margin: 11px 0 0; color: var(--orange-text); font-size: 10px; }
+.extractor-diagnostics { display: grid; gap: 7px; margin-top: 14px; }
+.extractor-diagnostics details { padding: 9px 11px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-soft); }
+.extractor-diagnostics summary { color: var(--foreground); font-size: 10px; font-weight: 600; cursor: pointer; }
+.extractor-diagnostics p { margin: 8px 0 0; color: var(--muted-foreground); font-size: 9px; line-height: 1.6; overflow-wrap: anywhere; }
+.review-row-manual { background: color-mix(in oklch, var(--orange-soft) 46%, var(--card)); }
+.review-row-ocr input { border-color: color-mix(in oklch, var(--blue-text) 52%, var(--border)); }
+.review-confirmation { display: grid; justify-items: start; gap: 8px; margin-top: 13px; padding: 13px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-soft); }
+.review-confirmation > strong { color: var(--foreground); font-size: 11px; }
+.review-confirmation > span { color: var(--muted-foreground); font-size: 10px; }
+.review-confirmation > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.review-submit { display: grid; justify-items: end; gap: 8px; max-width: min(100%, 520px); margin-left: auto; }
+.review-save-result { margin: 0; padding: 9px 11px; border: 1px solid var(--border); border-radius: 5px; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.review-save-success { border-color: color-mix(in oklch, var(--green-text) 25%, var(--border)); background: var(--green-soft); color: var(--green-text); }
+.review-save-warning { border-color: color-mix(in oklch, var(--orange-text) 25%, var(--border)); background: var(--orange-soft); color: var(--orange-text); }
+.review-save-error { border-color: color-mix(in oklch, var(--red-text) 25%, var(--border)); background: var(--red-soft); color: var(--red-text); }
+.review-confirmation .review-save-result { width: 100%; }
 .extension-note { margin-top: 12px; padding: 9px 11px; border-left: 2px solid var(--primary); background: var(--surface-soft); color: var(--muted-foreground); font-size: 10px; }
 .extension-note strong { color: var(--foreground); font-weight: 650; }
 .extension-admin-controls { display: grid; gap: 8px; }
@@ -482,6 +505,7 @@ button:disabled { cursor: not-allowed; }
   .parameter-table { min-width: 640px; }
   .review-bottom { align-items: stretch; flex-direction: column; }
   .review-bottom .primary-action { align-self: flex-start; }
+  .review-submit { justify-items: start; max-width: 100%; margin-left: 0; }
   .mapping-table { min-width: 620px; }
   .section-title-row:has(.mapping-search) { align-items: flex-start; flex-direction: column; }
   .mapping-search { width: 100%; }

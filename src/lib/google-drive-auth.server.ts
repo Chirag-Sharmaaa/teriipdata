@@ -1,5 +1,8 @@
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
-const DRIVE_READ_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+export const GOOGLE_DRIVE_READ_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+export const GOOGLE_SHEETS_READ_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+export const GOOGLE_SHEETS_WRITE_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+export const GOOGLE_DRIVE_AND_SHEETS_WRITE_SCOPE = `${GOOGLE_DRIVE_READ_SCOPE} ${GOOGLE_SHEETS_WRITE_SCOPE}`;
 
 function encodeBase64Url(bytes: Uint8Array) {
   let binary = "";
@@ -27,12 +30,13 @@ export async function createGoogleDriveAccessToken(
   serviceAccountEmail: string,
   privateKeyPem: string,
   fetcher: typeof fetch = fetch,
+  scope = GOOGLE_DRIVE_READ_SCOPE,
 ) {
   const issuedAt = Math.floor(Date.now() / 1000);
   const encodedHeader = encodeJson({ alg: "RS256", typ: "JWT" });
   const encodedClaims = encodeJson({
     iss: serviceAccountEmail,
-    scope: DRIVE_READ_SCOPE,
+    scope,
     aud: GOOGLE_TOKEN_ENDPOINT,
     iat: issuedAt,
     exp: issuedAt + 3600,

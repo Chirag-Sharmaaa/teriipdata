@@ -81,10 +81,11 @@ export function passwordProblem(password: string, confirm: string) {
 /** Only TERIIP-hosted or local origins may receive account links. */
 export function safeAccountLinkOrigin(origin: string | null | undefined) {
   if (!origin) return null;
-  return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.lovable\.app$/.test(origin) ||
-    /^http:\/\/localhost(:\d+)?$/.test(origin)
-    ? origin
-    : null;
+  const configured = process.env["TERIIP_AUTH_REDIRECT_ORIGINS"]
+    ?.split(",")
+    .map((value) => value.trim().replace(/\/+$/, ""));
+  if (configured?.includes(origin.replace(/\/+$/, ""))) return origin;
+  return /^http:\/\/localhost(:\d+)?$/.test(origin) ? origin : null;
 }
 
 export function centreSlug(centre: string) {
